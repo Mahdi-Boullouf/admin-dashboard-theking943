@@ -48,7 +48,8 @@ export default function EarningsPage() {
   const stats = [
     {
       title: "Total Earnings",
-      value: `${(dashboardData?.totalDoctorFees ?? dashboardData?.totalEarnings ?? 0).toLocaleString()}`,
+      // Admin's own earnings (flat 20 DA per completed appointment)
+      value: `${(dashboardData?.totalAdminEarnings ?? dashboardData?.totalEarnings ?? 0).toLocaleString()}`,
       change: "+ 36%", // Static for UI matching, or dashboardData?.earningsChange
       icon: "",
       color: "bg-[#E6F9F1]", // Light green
