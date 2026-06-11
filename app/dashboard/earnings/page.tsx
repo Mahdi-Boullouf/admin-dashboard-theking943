@@ -27,20 +27,28 @@ import Image from "next/image";
 
 export default function EarningsPage() {
   const [page, setPage] = useState(1);
-  const [period, setPeriod] = useState("monthly");
+  const [period, setPeriod] = useState("all");
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ["earnings-overview", page, period],
-    queryFn: () => earningsAPI.getEarningsOverview(), // Replace with actual paginated call if available
+    queryKey: ["earnings-overview", period],
+    queryFn: () => earningsAPI.getEarningsOverview(period),
   });
 
   const dashboardData = response?.data?.data;
-  const doctors = dashboardData?.doctors || [];
+  const allDoctors = dashboardData?.doctors || [];
+
+  // The earnings endpoint returns ALL doctors at once, so paginate client-side.
+  const PAGE_SIZE = 10;
+  const totalResults = allDoctors.length;
+  const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const doctors = allDoctors.slice(startIdx, startIdx + PAGE_SIZE);
 
   const stats = [
     {
       title: "Total Earnings",
-      value: `${dashboardData?.totalEarnings?.toLocaleString() || "0.00"}`,
+      value: `${(dashboardData?.totalDoctorFees ?? dashboardData?.totalEarnings ?? 0).toLocaleString()}`,
       change: "+ 36%", // Static for UI matching, or dashboardData?.earningsChange
       icon: "",
       color: "bg-[#E6F9F1]", // Light green
@@ -84,16 +92,23 @@ export default function EarningsPage() {
         </div>
         <div className="flex bg-slate-100 p-1 rounded-lg">
           <Button
-            variant={period === "weekly" ? "secondary" : "ghost"}
-            onClick={() => setPeriod("weekly")}
-            className="rounded-md px-6"
+            variant={period === "all" ? "default" : "ghost"}
+            onClick={() => { setPeriod("all"); setPage(1); }}
+            className={`rounded-md px-6 ${period === "all" ? "bg-[#3B82F6]" : ""}`}
+          >
+            All Time
+          </Button>
+          <Button
+            variant={period === "weekly" ? "default" : "ghost"}
+            onClick={() => { setPeriod("weekly"); setPage(1); }}
+            className={`rounded-md px-6 ${period === "weekly" ? "bg-[#3B82F6]" : ""}`}
           >
             Weekly View
           </Button>
           <Button
             variant={period === "monthly" ? "default" : "ghost"}
-            onClick={() => setPeriod("monthly")}
-            className="rounded-md px-6 bg-[#3B82F6]"
+            onClick={() => { setPeriod("monthly"); setPage(1); }}
+            className={`rounded-md px-6 ${period === "monthly" ? "bg-[#3B82F6]" : ""}`}
           >
             Monthly View
           </Button>
@@ -217,21 +232,29 @@ export default function EarningsPage() {
           {/* Pagination Footer */}
           <div className="p-6 flex items-center justify-between border-t border-slate-50">
             <span className="text-sm text-slate-400">
-              Showing 1 to 10 of 120 results
+              {totalResults === 0
+                ? "No results"
+                : `Showing ${startIdx + 1} to ${Math.min(
+                    startIdx + PAGE_SIZE,
+                    totalResults,
+                  )} of ${totalResults} results`}
             </span>
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 text-slate-400 border-slate-200"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              {[1, 2, 3, "...", 17].map((n, i) => (
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                 <Button
-                  key={i}
-                  variant={n === 1 ? "default" : "outline"}
-                  className={`h-8 w-8 p-0 ${n === 1 ? "bg-blue-600" : "text-slate-500 border-slate-200"}`}
+                  key={n}
+                  variant={n === currentPage ? "default" : "outline"}
+                  className={`h-8 w-8 p-0 ${n === currentPage ? "bg-blue-600" : "text-slate-500 border-slate-200"}`}
+                  onClick={() => setPage(n)}
                 >
                   {n}
                 </Button>
@@ -240,6 +263,8 @@ export default function EarningsPage() {
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 text-slate-400 border-slate-200"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

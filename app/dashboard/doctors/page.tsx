@@ -40,7 +40,18 @@ import {
   MapPin,
   Star,
   Briefcase,
+  Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -59,6 +70,8 @@ export default function DoctorsPage() {
   const [status, setStatus] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  // Doctor pending deletion (null = no confirmation dialog open)
+  const [doctorToDelete, setDoctorToDelete] = useState<any | null>(null);
   const queryClient = useQueryClient();
   const ITEMS_PER_PAGE = 10;
 
@@ -89,6 +102,18 @@ export default function DoctorsPage() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update status");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => doctorsAPI.deleteDoctor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Doctor deleted");
+      setDoctorToDelete(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete doctor");
     },
   });
 
@@ -254,7 +279,7 @@ export default function DoctorsPage() {
                                   onClick={() =>
                                     approveMutation.mutate({
                                       id: doctor._id,
-                                      approvalStatus: "suspended",
+                                      approvalStatus: "rejected",
                                     })
                                   }
                                   disabled={approveMutation.isPending}
@@ -273,6 +298,14 @@ export default function DoctorsPage() {
                               }}
                             >
                               <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => setDoctorToDelete(doctor)}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -458,6 +491,40 @@ export default function DoctorsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={Boolean(doctorToDelete)}
+        onOpenChange={(open) => !open && setDoctorToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete doctor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-semibold">
+                {doctorToDelete?.fullName || "this doctor"}
+              </span>{" "}
+              and their account data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (doctorToDelete?._id) deleteMutation.mutate(doctorToDelete._id);
+              }}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Suspense>
   );
 }

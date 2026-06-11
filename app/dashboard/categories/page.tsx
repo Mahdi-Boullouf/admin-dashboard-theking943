@@ -90,8 +90,10 @@ export default function CategoriesPage() {
   });
 
   const categories = response?.data?.data || [];
-  const totalResults = response?.data?.total || categories.length; // Backend might send total separately
-  const totalPages = Math.ceil(totalResults / ITEMS_PER_PAGE);
+  // Backend returns pagination meta under `pagination` (total, totalPages)
+  const pagination = response?.data?.pagination;
+  const totalResults = pagination?.total ?? categories.length;
+  const totalPages = pagination?.totalPages ?? Math.ceil(totalResults / ITEMS_PER_PAGE);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

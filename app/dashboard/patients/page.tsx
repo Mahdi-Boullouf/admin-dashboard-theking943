@@ -24,7 +24,17 @@ import {
 import { patientsAPI } from "@/lib/api-client";
 import { TableSkeleton } from "@/components/skeletons";
 import { toast } from "sonner";
-import { Search, Eye, Check, X, Mail, Phone, MapPin, User } from "lucide-react";
+import { Search, Eye, Check, X, Mail, Phone, MapPin, User, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -43,6 +53,8 @@ export default function PatientsPage() {
   const [status, setStatus] = useState("all"); // Updated default value to "all"
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  // Patient pending deletion (null = no confirmation dialog open)
+  const [patientToDelete, setPatientToDelete] = useState<any | null>(null);
   const queryClient = useQueryClient();
   const ITEMS_PER_PAGE = 10;
 
@@ -60,6 +72,18 @@ export default function PatientsPage() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update status");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => patientsAPI.deletePatient(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      toast.success("Patient deleted");
+      setPatientToDelete(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete patient");
     },
   });
 
@@ -224,6 +248,14 @@ export default function PatientsPage() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => setPatientToDelete(patient)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -343,6 +375,40 @@ export default function PatientsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={Boolean(patientToDelete)}
+        onOpenChange={(open) => !open && setPatientToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-semibold">
+                {patientToDelete?.fullName || "this patient"}
+              </span>{" "}
+              and their account data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (patientToDelete?._id) deleteMutation.mutate(patientToDelete._id);
+              }}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Suspense>
   );
 }

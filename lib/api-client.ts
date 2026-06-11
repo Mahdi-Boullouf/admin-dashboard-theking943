@@ -139,7 +139,8 @@ export const doctorsAPI = {
 
   deleteDoctor: async (id: string) => {
     const client = await getApiClient();
-    return client.delete(`/user/doctor/${id}`);
+    // Backend exposes a single admin delete route: DELETE /user/:id
+    return client.delete(`/user/${id}`);
   },
 };
 
@@ -167,7 +168,8 @@ export const patientsAPI = {
 
   deletePatient: async (id: string) => {
     const client = await getApiClient();
-    return client.delete(`/user/patient/${id}`);
+    // Backend exposes a single admin delete route: DELETE /user/:id
+    return client.delete(`/user/${id}`);
   },
 };
 
@@ -249,9 +251,9 @@ export const earningsAPI = {
     return client.get(`/earnings/doctors?${params.toString()}`);
   },
 
-  getEarningsOverview: async () => {
+  getEarningsOverview: async (view = "monthly") => {
     const client = await getApiClient();
-    return client.get("/appointment/earnings/overview");
+    return client.get(`/appointment/earnings/overview?view=${view}`);
   },
 };
 
