@@ -18,12 +18,14 @@ import {
   DollarSign,
   Calendar,
   Users,
+  Eye,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function EarningsPage() {
   const [page, setPage] = useState(1);
@@ -209,20 +211,14 @@ export default function EarningsPage() {
                       ${doc.earnings.toFixed(2)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
-                      >
-                        {idx === 1 ? (
-                          <>
-                            <ChevronUp className="h-4 w-4" /> Hide
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="h-4 w-4" /> View
-                          </>
-                        )}
-                      </Button>
+                      <Link href={`/dashboard/doctors/${doc.doctorId}`}>
+                        <Button
+                          variant="ghost"
+                          className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                        >
+                          <Eye className="h-4 w-4" /> View
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))

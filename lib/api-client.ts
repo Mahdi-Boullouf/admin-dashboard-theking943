@@ -255,6 +255,18 @@ export const earningsAPI = {
     const client = await getApiClient();
     return client.get(`/appointment/earnings/overview?view=${view}`);
   },
+
+  // A single doctor's earnings, optionally within a custom date range (admin).
+  getDoctorEarnings: async (doctorId: string, startDate = "", endDate = "") => {
+    const client = await getApiClient();
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    const qs = params.toString();
+    return client.get(
+      `/appointment/earnings/doctor/${doctorId}${qs ? `?${qs}` : ""}`,
+    );
+  },
 };
 
 // Referral Codes APIs

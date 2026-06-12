@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Suspense } from "react";
+import Link from "next/link";
 import Loading from "../appointments/loading";
 
 export default function DoctorsPage() {
@@ -212,7 +213,10 @@ export default function DoctorsPage() {
                     {doctors.map((doctor: any) => (
                       <TableRow key={doctor._id}>
                         <TableCell>
-                          <div className="flex items-center gap-3">
+                          <Link
+                            href={`/dashboard/doctors/${doctor._id}`}
+                            className="flex items-center gap-3 group"
+                          >
                             <Avatar className="h-8 w-8">
                               <AvatarImage
                                 src={doctor.avatar?.url || "/placeholder.svg"}
@@ -223,12 +227,14 @@ export default function DoctorsPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{doctor.fullName}</p>
+                              <p className="font-medium group-hover:text-blue-600 group-hover:underline">
+                                {doctor.fullName}
+                              </p>
                               <p className="text-xs text-gray-600">
                                 {doctor.email}
                               </p>
                             </div>
-                          </div>
+                          </Link>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
