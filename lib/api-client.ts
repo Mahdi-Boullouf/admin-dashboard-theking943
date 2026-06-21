@@ -197,7 +197,8 @@ export const appointmentsAPI = {
 
   cancelAppointment: async (id: string) => {
     const client = await getApiClient();
-    return client.patch(`/appointment/${id}/cancel`, {});
+    // Cancellation goes through the status endpoint; there is no /cancel route.
+    return client.patch(`/appointment/${id}/status`, { status: "cancelled" });
   },
 };
 
@@ -243,14 +244,6 @@ export const categoriesAPI = {
 
 // Earnings APIs
 export const earningsAPI = {
-  getDoctorEarnings: async (page = 1, limit = 10) => {
-    const client = await getApiClient();
-    const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
-    return client.get(`/earnings/doctors?${params.toString()}`);
-  },
-
   getEarningsOverview: async (view = "monthly") => {
     const client = await getApiClient();
     return client.get(`/appointment/earnings/overview?view=${view}`);
