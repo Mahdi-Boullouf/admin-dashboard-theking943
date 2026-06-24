@@ -39,6 +39,9 @@ export const doctorAppointmentsAPI = {
     if (status && status !== "all") params.append("status", status);
     return doctorClient.get(`/appointment?${params}`);
   },
+  // Fetch every appointment for export (no pagination cap)
+  getAllForExport: () =>
+    doctorClient.get(`/appointment?page=1&limit=5000`),
   updateStatus: (id: string, status: "accepted" | "cancelled" | "completed") =>
     doctorClient.patch(`/appointment/${id}/status`, { status }),
 };
