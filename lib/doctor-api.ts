@@ -44,4 +44,8 @@ export const doctorAppointmentsAPI = {
     doctorClient.get(`/appointment?page=1&limit=5000`),
   updateStatus: (id: string, status: "accepted" | "cancelled" | "completed") =>
     doctorClient.patch(`/appointment/${id}/status`, { status }),
+  reschedule: (id: string, date: string, time: string) =>
+    doctorClient.patch(`/appointment/${id}`, { date, time }),
+  delete: (id: string) =>
+    doctorClient.delete(`/appointment/${id}`),
 };

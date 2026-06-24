@@ -1,17 +1,31 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
 import { doctorAppointmentsAPI } from "@/lib/doctor-api";
-import {
-  useDoctorSocket,
-  type AppointmentEvent,
-} from "@/hooks/use-doctor-socket";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Calendar,
@@ -26,8 +40,9 @@ import {
   RefreshCw,
   CalendarDays,
   Download,
-  Wifi,
-  WifiOff,
+  Pencil,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
@@ -39,15 +54,6 @@ const STATUS_TABS = [
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
-
-const EVENT_LABELS: Record<AppointmentEvent, string> = {
-  appointment_booked: "New appointment booked",
-  appointment_rescheduled: "Appointment rescheduled",
-  appointment_confirmed: "Appointment confirmed",
-  appointment_cancelled: "Appointment cancelled",
-  appointment_completed: "Appointment completed",
-  appointment_status_change: "Appointment updated",
-};
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -73,20 +79,20 @@ function fmt(dateStr?: string) {
   });
 }
 
-// ── Excel export ─────────────────────────────────────────────────────────────
+// Convert ISO date to yyyy-mm-dd for <input type="date">
+function toInputDate(dateStr?: string) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toISOString().slice(0, 10);
+}
+
 async function exportToExcel() {
-  const loadingId = toast.loading("Preparing export…");
+  const id = toast.loading("Preparing export…");
   try {
     const res = await doctorAppointmentsAPI.getAllForExport();
     const rows: any[] = res.data?.data ?? [];
+    if (!rows.length) { toast.dismiss(id); toast.info("No appointments to export"); return; }
 
-    if (rows.length === 0) {
-      toast.dismiss(loadingId);
-      toast.info("No appointments to export");
-      return;
-    }
-
-    const sheetData = rows.map((a, i) => ({
+    const sheet = rows.map((a, i) => ({
       "#": i + 1,
       "Patient Name": a.patient?.fullName ?? "—",
       "Patient Email": a.patient?.email ?? "—",
@@ -101,46 +107,36 @@ async function exportToExcel() {
     }));
 
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(sheetData);
-
-    // Column widths
+    const ws = XLSX.utils.json_to_sheet(sheet);
     ws["!cols"] = [
       { wch: 4 }, { wch: 22 }, { wch: 28 }, { wch: 16 },
       { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
       { wch: 30 }, { wch: 12 }, { wch: 14 },
     ];
-
     XLSX.utils.book_append_sheet(wb, ws, "Appointments");
     XLSX.writeFile(wb, `appointments_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-    toast.dismiss(loadingId);
+    toast.dismiss(id);
     toast.success(`Exported ${rows.length} appointments`);
   } catch {
-    toast.dismiss(loadingId);
+    toast.dismiss(id);
     toast.error("Export failed");
   }
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
 export default function DoctorAppointmentsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Real-time socket — stable callback so the hook never re-mounts
-  const handleSocketEvent = useCallback(
-    (event: AppointmentEvent, payload: unknown) => {
-      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
-      toast.info(EVENT_LABELS[event] ?? "Appointment updated", {
-        description: "List refreshed automatically",
-        duration: 4000,
-      });
-    },
-    [queryClient]
-  );
+  // Reschedule dialog state
+  const [rescheduleAppt, setRescheduleAppt] = useState<any | null>(null);
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
 
-  const { isConnected } = useDoctorSocket({ onAppointmentEvent: handleSocketEvent });
+  // Delete confirm state
+  const [deleteAppt, setDeleteAppt] = useState<any | null>(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
 
   const { data: response, isLoading, isError, refetch } = useQuery({
     queryKey: ["doctor-appointments", page, statusFilter],
@@ -148,16 +144,49 @@ export default function DoctorAppointmentsPage() {
       doctorAppointmentsAPI.getAppointments(page, ITEMS_PER_PAGE, statusFilter),
   });
 
-  const updateMutation = useMutation({
+  const acceptMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: "accepted" | "cancelled" }) =>
       doctorAppointmentsAPI.updateStatus(id, status),
-    onSuccess: (_, vars) => {
+    onSuccess: (_, v) => {
       queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
-      toast.success(vars.status === "accepted" ? "Appointment accepted" : "Appointment refused");
+      toast.success(v.status === "accepted" ? "Appointment accepted" : "Appointment refused");
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Action failed");
+    onError: (e: any) => toast.error(e.response?.data?.message || "Action failed"),
+  });
+
+  const rescheduleMutation = useMutation({
+    mutationFn: ({ id, date, time }: { id: string; date: string; time: string }) =>
+      doctorAppointmentsAPI.reschedule(id, date, time),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+      setRescheduleAppt(null);
+      toast.success("Appointment rescheduled");
     },
+    onError: (e: any) => toast.error(e.response?.data?.message || "Reschedule failed"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => doctorAppointmentsAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+      setDeleteAppt(null);
+      toast.success("Appointment deleted");
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message || "Delete failed"),
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        await doctorAppointmentsAPI.delete(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+      setDeleteAllOpen(false);
+      toast.success("All appointments deleted");
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message || "Delete all failed"),
   });
 
   const appointments: any[] = response?.data?.data ?? [];
@@ -171,25 +200,18 @@ export default function DoctorAppointmentsPage() {
       )
     : appointments;
 
+  const openReschedule = (appt: any) => {
+    setRescheduleAppt(appt);
+    setNewDate(toInputDate(appt.appointmentDate));
+    setNewTime(appt.time ?? "");
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header row */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
-            {/* Live indicator */}
-            <span
-              className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                isConnected
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-400"
-              }`}
-            >
-              {isConnected ? <Wifi size={11} /> : <WifiOff size={11} />}
-              {isConnected ? "Live" : "Offline"}
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {total} appointment{total !== 1 ? "s" : ""}
             {pendingCount > 0 && (
@@ -199,19 +221,24 @@ export default function DoctorAppointmentsPage() {
             )}
           </p>
         </div>
-
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
             <RefreshCw size={14} />
             Refresh
           </Button>
-          <Button
-            size="sm"
-            onClick={exportToExcel}
-            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
+          <Button size="sm" onClick={exportToExcel} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
             <Download size={14} />
             Export Excel
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1.5"
+            disabled={appointments.length === 0}
+            onClick={() => setDeleteAllOpen(true)}
+          >
+            <Trash2 size={14} />
+            Delete All
           </Button>
         </div>
       </div>
@@ -233,7 +260,6 @@ export default function DoctorAppointmentsPage() {
             </button>
           ))}
         </div>
-
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
           <Input
@@ -260,7 +286,6 @@ export default function DoctorAppointmentsPage() {
               <div className="space-y-2">
                 <div className="h-2.5 w-full bg-gray-200 rounded" />
                 <div className="h-2.5 w-3/4 bg-gray-200 rounded" />
-                <div className="h-2.5 w-1/2 bg-gray-200 rounded" />
               </div>
             </div>
           ))}
@@ -284,8 +309,10 @@ export default function DoctorAppointmentsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((appt) => {
             const isPending = appt.status === "pending";
-            const isUpdating =
-              updateMutation.isPending && (updateMutation.variables as any)?.id === appt._id;
+            const canEdit = !["completed", "cancelled"].includes(appt.status);
+            const isAccepting = acceptMutation.isPending && (acceptMutation.variables as any)?.id === appt._id && (acceptMutation.variables as any)?.status === "accepted";
+            const isRefusing = acceptMutation.isPending && (acceptMutation.variables as any)?.id === appt._id && (acceptMutation.variables as any)?.status === "cancelled";
+            const isDeleting = deleteMutation.isPending && (deleteMutation.variables as any) === appt._id;
 
             return (
               <div
@@ -294,7 +321,7 @@ export default function DoctorAppointmentsPage() {
                   isPending ? "border-amber-200 shadow-amber-50 shadow" : "border-gray-200"
                 }`}
               >
-                {/* Patient + status */}
+                {/* Patient + status + actions */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="h-10 w-10 shrink-0">
@@ -312,7 +339,26 @@ export default function DoctorAppointmentsPage() {
                       </p>
                     </div>
                   </div>
-                  {statusBadge(appt.status)}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {statusBadge(appt.status)}
+                    {canEdit && (
+                      <button
+                        onClick={() => openReschedule(appt)}
+                        className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Reschedule"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setDeleteAppt(appt)}
+                      disabled={isDeleting}
+                      className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Delete"
+                    >
+                      {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Details */}
@@ -341,26 +387,26 @@ export default function DoctorAppointmentsPage() {
                   )}
                 </div>
 
-                {/* Accept / Refuse */}
+                {/* Accept / Refuse — only for pending */}
                 {isPending && (
                   <div className="flex gap-2 pt-1 border-t border-gray-100">
                     <Button
                       size="sm"
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-1.5"
-                      disabled={isUpdating}
-                      onClick={() => updateMutation.mutate({ id: appt._id, status: "accepted" })}
+                      disabled={isAccepting || isRefusing}
+                      onClick={() => acceptMutation.mutate({ id: appt._id, status: "accepted" })}
                     >
-                      <CheckCircle size={14} />
+                      {isAccepting ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                       Accept
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 gap-1.5"
-                      disabled={isUpdating}
-                      onClick={() => updateMutation.mutate({ id: appt._id, status: "cancelled" })}
+                      disabled={isAccepting || isRefusing}
+                      onClick={() => acceptMutation.mutate({ id: appt._id, status: "cancelled" })}
                     >
-                      <XCircle size={14} />
+                      {isRefusing ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
                       Refuse
                     </Button>
                   </div>
@@ -383,6 +429,105 @@ export default function DoctorAppointmentsPage() {
           </Button>
         </div>
       )}
+
+      {/* ── Reschedule Dialog ─────────────────────────────────────────────── */}
+      <Dialog open={!!rescheduleAppt} onOpenChange={(o) => !o && setRescheduleAppt(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reschedule Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500">
+              Patient: <span className="font-medium text-gray-800">{rescheduleAppt?.patient?.fullName}</span>
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="new-date">New Date</Label>
+              <Input
+                id="new-date"
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-time">New Time</Label>
+              <Input
+                id="new-time"
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleAppt(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!newDate || !newTime || rescheduleMutation.isPending}
+              onClick={() =>
+                rescheduleMutation.mutate({
+                  id: rescheduleAppt._id,
+                  date: newDate,
+                  time: newTime,
+                })
+              }
+            >
+              {rescheduleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Confirm ────────────────────────────────────────────────── */}
+      <AlertDialog open={!!deleteAppt} onOpenChange={(o) => !o && setDeleteAppt(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this appointment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Appointment with <strong>{deleteAppt?.patient?.fullName}</strong> on{" "}
+              {fmt(deleteAppt?.appointmentDate)} will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deleteMutation.mutate(deleteAppt._id)}
+            >
+              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Delete All Confirm ────────────────────────────────────────────── */}
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all appointments?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all <strong>{appointments.length}</strong> appointment
+              {appointments.length !== 1 ? "s" : ""} on this page. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deleteAllMutation.mutate(appointments.map((a) => a._id))}
+            >
+              {deleteAllMutation.isPending
+                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                : null}
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
