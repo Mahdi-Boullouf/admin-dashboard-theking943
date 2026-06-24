@@ -7,6 +7,7 @@ import { LogOut, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { t, getLang, setLang, type Lang } from "@/lib/doctor-i18n";
 
 interface DoctorUser {
   _id: string;
@@ -21,12 +22,14 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const [doctor, setDoctor] = useState<DoctorUser | null>(null);
   const [checked, setChecked] = useState(false);
+  const [lang, setLangState] = useState<Lang>("fr");
 
   useEffect(() => {
+    setLangState(getLang());
+
     const token = localStorage.getItem("doctor_token");
     const raw = localStorage.getItem("doctor_user");
 
-    // Allow /doctor/login without auth
     if (pathname === "/doctor/login") {
       setChecked(true);
       return;
@@ -46,20 +49,26 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     setChecked(true);
   }, [pathname, router]);
 
+  const toggleLang = () => {
+    const next: Lang = lang === "fr" ? "en" : "fr";
+    setLang(next);
+    setLangState(next);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("doctor_token");
     localStorage.removeItem("doctor_user");
-    toast.success("Logged out");
+    toast.success(t[lang].logout);
     router.push("/doctor/login");
   };
 
-  // Don't render the header on the login page
   if (!checked) return null;
   if (pathname === "/doctor/login") return <>{children}</>;
 
+  const tr = t[lang];
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo + portal label */}
@@ -69,12 +78,21 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
             </div>
             <div className="hidden sm:flex items-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-xs font-medium">
               <Stethoscope size={13} />
-              Doctor Portal
+              {tr.doctorPortal}
             </div>
           </div>
 
-          {/* Doctor info + logout */}
-          <div className="flex items-center gap-3">
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <button
+              onClick={toggleLang}
+              className="text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors"
+            >
+              {lang === "fr" ? "EN" : "FR"}
+            </button>
+
+            {/* Doctor info */}
             <div className="flex items-center gap-2.5">
               <Avatar className="h-9 w-9 border-2 border-blue-100">
                 <AvatarImage src={doctor?.avatar?.url} />
@@ -91,6 +109,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                 )}
               </div>
             </div>
+
             <Button
               variant="ghost"
               size="sm"
@@ -98,13 +117,12 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
               className="text-gray-500 hover:text-red-600 hover:bg-red-50"
             >
               <LogOut size={16} className="mr-1" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{tr.logout}</span>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Page content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>

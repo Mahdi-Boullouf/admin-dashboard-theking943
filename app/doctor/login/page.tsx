@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { doctorAuthAPI } from "@/lib/doctor-api";
+import { t, getLang, setLang, type Lang } from "@/lib/doctor-i18n";
 
 export default function DoctorLoginPage() {
   const router = useRouter();
@@ -17,17 +18,27 @@ export default function DoctorLoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [lang, setLangState] = useState<Lang>("fr");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("doctor_token")) {
+    setLangState(getLang());
+    if (localStorage.getItem("doctor_token")) {
       router.replace("/doctor/my-appointments");
     }
   }, [router]);
 
+  const toggleLang = () => {
+    const next: Lang = lang === "fr" ? "en" : "fr";
+    setLang(next);
+    setLangState(next);
+  };
+
+  const tr = t[lang];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      toast.error(tr.fillAllFields);
       return;
     }
     setIsLoading(true);
@@ -36,16 +47,16 @@ export default function DoctorLoginPage() {
       const { data } = res.data;
 
       if (data?.user?.role !== "doctor") {
-        toast.error("Access denied. This portal is for doctors only.");
+        toast.error(tr.accessDenied);
         return;
       }
 
       localStorage.setItem("doctor_token", data.accessToken);
       localStorage.setItem("doctor_user", JSON.stringify(data.user));
-      toast.success("Welcome back, Dr. " + (data.user.fullName?.split(" ")[0] ?? ""));
+      toast.success(`${tr.welcome} ${data.user.fullName?.split(" ")[0] ?? ""}`);
       router.push("/doctor/my-appointments");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Invalid credentials");
+      toast.error(err.response?.data?.message || tr.invalidCredentials);
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +64,14 @@ export default function DoctorLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      {/* Language toggle */}
+      <button
+        onClick={toggleLang}
+        className="fixed top-4 right-4 text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-300 bg-white text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm"
+      >
+        {lang === "fr" ? "EN" : "FR"}
+      </button>
+
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center pb-2">
           <div className="relative w-32 h-20 mx-auto">
@@ -60,19 +79,19 @@ export default function DoctorLoginPage() {
           </div>
           <div className="flex items-center justify-center gap-2 text-blue-700">
             <Stethoscope size={20} />
-            <span className="font-semibold text-base">Doctor Portal</span>
+            <span className="font-semibold text-base">{tr.doctorPortal}</span>
           </div>
-          <CardDescription>Sign in to manage your appointments</CardDescription>
+          <CardDescription>{tr.signInSubtitle}</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{tr.emailAddress}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="doctor@example.com"
+                placeholder={tr.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
@@ -81,7 +100,7 @@ export default function DoctorLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{tr.password}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -109,7 +128,7 @@ export default function DoctorLoginPage() {
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Signing in…" : "Sign In"}
+              {isLoading ? tr.signingIn : tr.signIn}
             </Button>
           </form>
         </CardContent>
