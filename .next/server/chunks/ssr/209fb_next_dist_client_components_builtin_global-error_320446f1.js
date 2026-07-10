@@ -1,0 +1,3 @@
+module.exports=[44825,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(16664);a.n(d("[project]/Desktop/Freelance/admin-dashboard-theking943/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},56221,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(16664);a.n(d("[project]/Desktop/Freelance/admin-dashboard-theking943/node_modules/next/dist/client/components/builtin/global-error.js"))},88411,a=>{"use strict";a.i(44825);var b=a.i(56221);a.n(b)}];
+
+//# sourceMappingURL=209fb_next_dist_client_components_builtin_global-error_320446f1.js.map

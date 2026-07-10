@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/dashboard/appointments/page": "app/dashboard/appointments/page.js",
+  "/dashboard/categories/page": "app/dashboard/categories/page.js",
+  "/dashboard/doctors/[id]/page": "app/dashboard/doctors/[id]/page.js",
+  "/dashboard/doctors/page": "app/dashboard/doctors/page.js",
+  "/dashboard/earnings/page": "app/dashboard/earnings/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/patients/page": "app/dashboard/patients/page.js",
+  "/dashboard/referral/page": "app/dashboard/referral/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/doctor/login/page": "app/doctor/login/page.js",
+  "/doctor/my-appointments/page": "app/doctor/my-appointments/page.js",
+  "/forgot-password/page": "app/forgot-password/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/privacy-policy/page": "app/privacy-policy/page.js",
+  "/reset-password/page": "app/reset-password/page.js",
+  "/verify-otp/page": "app/verify-otp/page.js"
+}

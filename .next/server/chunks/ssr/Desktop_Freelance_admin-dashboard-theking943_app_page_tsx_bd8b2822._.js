@@ -1,0 +1,3 @@
+module.exports=[18650,a=>{"use strict";var b=a.i(8388),c=a.i(18359),d=a.i(31919);function e(){let a=(0,d.useRouter)();return(0,c.useEffect)(()=>{localStorage.getItem("accessToken")?a.push("/dashboard"):a.push("/login")},[a]),(0,b.jsx)("div",{className:"flex items-center justify-center min-h-screen",children:(0,b.jsxs)("div",{className:"text-center",children:[(0,b.jsx)("div",{className:"animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"}),(0,b.jsx)("p",{className:"text-gray-600",children:"Loading..."})]})})}a.s(["default",()=>e])}];
+
+//# sourceMappingURL=Desktop_Freelance_admin-dashboard-theking943_app_page_tsx_bd8b2822._.js.map

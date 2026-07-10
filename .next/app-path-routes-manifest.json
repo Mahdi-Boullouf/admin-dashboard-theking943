@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
+  "/dashboard/appointments/page": "/dashboard/appointments",
+  "/dashboard/categories/page": "/dashboard/categories",
+  "/dashboard/doctors/[id]/page": "/dashboard/doctors/[id]",
+  "/dashboard/doctors/page": "/dashboard/doctors",
+  "/dashboard/earnings/page": "/dashboard/earnings",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/patients/page": "/dashboard/patients",
+  "/dashboard/referral/page": "/dashboard/referral",
+  "/dashboard/settings/page": "/dashboard/settings",
+  "/doctor/login/page": "/doctor/login",
+  "/doctor/my-appointments/page": "/doctor/my-appointments",
+  "/forgot-password/page": "/forgot-password",
+  "/login/page": "/login",
+  "/page": "/",
+  "/privacy-policy/page": "/privacy-policy",
+  "/reset-password/page": "/reset-password",
+  "/verify-otp/page": "/verify-otp"
+}
