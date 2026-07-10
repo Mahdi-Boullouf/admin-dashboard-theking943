@@ -85,6 +85,9 @@ export default function DoctorAppointmentsPage() {
   const [newTime, setNewTime] = useState("");
   const [deleteAppt, setDeleteAppt] = useState<any | null>(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
 
   useEffect(() => {
     setLangState(getLang());
@@ -105,9 +108,13 @@ export default function DoctorAppointmentsPage() {
   ];
 
   const exportToExcel = async () => {
+    setExportOpen(false);
     const id = toast.loading(tr.preparingExport);
     try {
-      const res = await doctorAppointmentsAPI.getAllForExport();
+      const res = await doctorAppointmentsAPI.getAllForExport(
+        exportStartDate || undefined,
+        exportEndDate || undefined,
+      );
       const rows: any[] = res.data?.data ?? [];
       if (!rows.length) { toast.dismiss(id); toast.info(tr.noExportData); return; }
 
@@ -133,12 +140,18 @@ export default function DoctorAppointmentsPage() {
         { wch: 30 }, { wch: 12 }, { wch: 14 },
       ];
       XLSX.utils.book_append_sheet(wb, ws, lang === "fr" ? "Rendez-vous" : "Appointments");
-      XLSX.writeFile(wb, `rendez-vous_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      const dateSuffix = exportStartDate && exportEndDate
+        ? `${exportStartDate}_${exportEndDate}`
+        : new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `rendez-vous_${dateSuffix}.xlsx`);
       toast.dismiss(id);
       toast.success(tr.exported(rows.length));
     } catch {
       toast.dismiss(id);
       toast.error(tr.exportFailed);
+    } finally {
+      setExportStartDate("");
+      setExportEndDate("");
     }
   };
 
@@ -226,7 +239,7 @@ export default function DoctorAppointmentsPage() {
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
             <RefreshCw size={14} />{tr.refresh}
           </Button>
-          <Button size="sm" onClick={exportToExcel} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button size="sm" onClick={() => setExportOpen(true)} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
             <Download size={14} />{tr.exportExcel}
           </Button>
           <Button
@@ -516,6 +529,42 @@ export default function DoctorAppointmentsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Export Date Range Dialog */}
+      <Dialog open={exportOpen} onOpenChange={(o) => { if (!o) { setExportOpen(false); setExportStartDate(""); setExportEndDate(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{tr.exportTitle}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-500">{tr.exportDesc}</p>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="export-start">{tr.startDate}</Label>
+              <Input
+                id="export-start"
+                type="date"
+                value={exportStartDate}
+                onChange={(e) => setExportStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="export-end">{tr.endDate}</Label>
+              <Input
+                id="export-end"
+                type="date"
+                value={exportEndDate}
+                onChange={(e) => setExportEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setExportOpen(false); setExportStartDate(""); setExportEndDate(""); }}>{tr.cancel}</Button>
+            <Button onClick={exportToExcel} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Download size={14} className="mr-2" />{tr.exportBtn}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

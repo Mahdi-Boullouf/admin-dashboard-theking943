@@ -68,6 +68,13 @@ export const t = {
     deleteAllDesc: (n: number) =>
       `This will permanently delete all ${n} appointment${n !== 1 ? "s" : ""} on this page. This cannot be undone.`,
 
+    // Export dialog
+    exportTitle: "Export Appointments",
+    exportDesc: "Select a date range to export appointments. Leave empty to export all.",
+    startDate: "Start Date",
+    endDate: "End Date",
+    exportBtn: "Export",
+
     // Toasts
     preparingExport: "Preparing export…",
     noExportData: "No appointments to export",
@@ -150,6 +157,13 @@ export const t = {
     deleteAllTitle: "Supprimer tous les rendez-vous ?",
     deleteAllDesc: (n: number) =>
       `Cela supprimera définitivement les ${n} rendez-vous de cette page. Cette action est irréversible.`,
+
+    // Export dialog
+    exportTitle: "Exporter les rendez-vous",
+    exportDesc: "Sélectionnez une période pour l'export. Laissez vide pour tout exporter.",
+    startDate: "Date de début",
+    endDate: "Date de fin",
+    exportBtn: "Exporter",
 
     // Toasts
     preparingExport: "Préparation de l'export…",

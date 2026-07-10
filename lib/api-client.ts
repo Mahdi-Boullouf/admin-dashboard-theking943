@@ -306,4 +306,35 @@ export const appSettingsAPI = {
     const client = await getApiClient();
     return client.get("/app-setting/get-referral-setting");
   },
+
+  // 🔄 Force update configuration
+  getAppConfig: async () => {
+    const client = await getApiClient();
+    return client.get("/app-config");
+  },
+
+  updateAppConfig: async (payload: {
+    minAppVersion?: number;
+    forceUpdateEnabled?: boolean;
+    androidStoreUrl?: string;
+    iosStoreUrl?: string;
+    forceUpdateMessage?: string;
+  }) => {
+    const client = await getApiClient();
+    return client.patch("/app-config", payload);
+  },
+
+  // 🎬 "How it works" tutorial video links
+  getYoutubeLinks: async () => {
+    const client = await getApiClient();
+    return client.get("/youtube-links");
+  },
+
+  updateYoutubeLinks: async (payload: {
+    patientVideo?: string;
+    doctorVideo?: string;
+  }) => {
+    const client = await getApiClient();
+    return client.patch("/youtube-links", payload);
+  },
 };
