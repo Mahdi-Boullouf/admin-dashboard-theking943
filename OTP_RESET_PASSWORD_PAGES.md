@@ -139,7 +139,7 @@ Login Page (/login)
 Required in `.env.local`:
 ```env
 NEXT_PUBLIC_BASE_URL=http://localhost:3001/api
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=<32+ char secret>
 ```
 

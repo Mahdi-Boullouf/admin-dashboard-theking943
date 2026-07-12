@@ -18,7 +18,7 @@ npm run dev
 ```
 
 ### Step 3: Login
-Visit http://localhost:3000 and login with:
+Visit http://admin.docmobidz.com and login with:
 ```
 Email: admin@example.com
 Password: 123456

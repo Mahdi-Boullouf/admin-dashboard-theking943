@@ -217,7 +217,7 @@ try {
 
 ```env
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-key-minimum-32-characters
 
 # API Configuration  

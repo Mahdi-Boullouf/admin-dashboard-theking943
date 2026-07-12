@@ -239,8 +239,8 @@ npm run dev
 ```
 
 ### 4. Access Application
-- Login: http://localhost:3000/login
-- Dashboard: http://localhost:3000/dashboard
+- Login: http://admin.docmobidz.com/login
+- Dashboard: http://admin.docmobidz.com/dashboard
 
 ### 5. Test Credentials
 Use the credentials from your API:

@@ -7,7 +7,7 @@
 openssl rand -base64 32
 
 # 2. Create .env.local with:
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=<paste-generated-secret>
 NEXT_PUBLIC_BASE_URL=http://localhost:3001/api
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
@@ -16,7 +16,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 npm install
 npm run dev
 
-# 4. Open http://localhost:3000/login
+# 4. Open http://admin.docmobidz.com/login
 # Login: admin@example.com / 123456
 ```
 

@@ -199,7 +199,7 @@ Protected Routes:
 **Required Environment Variables**:
 ```env
 # NextAuth
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-key
 
 # Backend API
@@ -386,7 +386,7 @@ npm install
 ### 3. Environment Setup
 ```bash
 # Create .env.local
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 NEXT_PUBLIC_BASE_URL=http://localhost:3001/api
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
@@ -398,7 +398,7 @@ npm run dev
 ```
 
 ### 5. Access Dashboard
-- Navigate to `http://localhost:3000/login`
+- Navigate to `http://admin.docmobidz.com/login`
 - Use credentials: `admin@example.com` / `123456`
 
 ## Key Files to Review

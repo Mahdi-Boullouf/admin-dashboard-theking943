@@ -123,7 +123,7 @@ Create `.env.local`:
 
 ```env
 # NextAuth
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-key-min-32-chars
 
 # Backend API
@@ -240,9 +240,9 @@ io.to(`notification_${userId}`).emit('notification_new', notification);
 ### 1. Verify NextAuth is Working
 ```bash
 # Visit this URL to see NextAuth routes
-http://localhost:3000/api/auth/signin
-http://localhost:3000/api/auth/signout
-http://localhost:3000/api/auth/session
+http://admin.docmobidz.com/api/auth/signin
+http://admin.docmobidz.com/api/auth/signout
+http://admin.docmobidz.com/api/auth/session
 ```
 
 ### 2. Test Login Flow

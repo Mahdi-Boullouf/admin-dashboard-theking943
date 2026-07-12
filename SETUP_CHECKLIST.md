@@ -26,7 +26,7 @@ Create `.env.local` in project root:
 
 ```bash
 # Copy and fill in these values:
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-here
 NEXT_PUBLIC_BASE_URL=http://localhost:3001/api
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
@@ -62,7 +62,7 @@ npm run dev
 ```
 
 **Verify**:
-- [ ] Server starts on `http://localhost:3000`
+- [ ] Server starts on `http://admin.docmobidz.com`
 - [ ] No console errors
 - [ ] No warnings in terminal
 
@@ -71,7 +71,7 @@ npm run dev
 ### Authentication Tests
 
 #### Test Login
-1. [ ] Navigate to `http://localhost:3000/login`
+1. [ ] Navigate to `http://admin.docmobidz.com/login`
 2. [ ] Page loads correctly
 3. [ ] Try invalid credentials (should show error)
 4. [ ] Login with `admin@example.com` / `123456`

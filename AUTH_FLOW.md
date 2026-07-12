@@ -165,7 +165,7 @@ Required in `.env.local`:
 
 ```env
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-key-here
 
 # API Configuration
@@ -220,7 +220,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 
 1. **Login Flow**:
    ```
-   Navigate to http://localhost:3000/login
+   Navigate to http://admin.docmobidz.com/login
    Enter: admin@example.com
    Enter: 123456
    Click "Log In"
@@ -238,7 +238,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 
 3. **Protected Route Access**:
    ```
-   Without login, visit http://localhost:3000/dashboard
+   Without login, visit http://admin.docmobidz.com/dashboard
    → Should redirect to /login
    ```
 

@@ -332,7 +332,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3001/api
 ### Development
 ```bash
 npm run dev
-# Visit http://localhost:3000
+# Visit http://admin.docmobidz.com
 ```
 
 ### Production Build

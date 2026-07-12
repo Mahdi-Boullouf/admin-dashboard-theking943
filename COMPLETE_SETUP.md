@@ -30,7 +30,7 @@ npm run dev
 ```
 
 ### 3. Login
-Visit `http://localhost:3000` → Login with:
+Visit `http://admin.docmobidz.com` → Login with:
 ```
 Email: admin@example.com
 Password: 123456
@@ -298,7 +298,7 @@ npm run dev
 ```
 
 ### Step 5: Open Browser
-Visit `http://localhost:3000`
+Visit `http://admin.docmobidz.com`
 
 ---
 

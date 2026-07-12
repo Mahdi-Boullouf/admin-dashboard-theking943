@@ -283,7 +283,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 ### .env.local
 ```env
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-secret-key-min-32-chars
 
 # API Base URL

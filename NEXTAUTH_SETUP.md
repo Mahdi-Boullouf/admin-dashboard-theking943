@@ -8,7 +8,7 @@ Add these to your `.env.local` file:
 
 ```env
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://admin.docmobidz.com
 NEXTAUTH_SECRET=your-random-secret-key-min-32-chars
 
 # Backend API
