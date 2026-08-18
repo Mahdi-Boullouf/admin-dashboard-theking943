@@ -144,6 +144,57 @@ export const doctorsAPI = {
   },
 };
 
+// Clinics APIs (admin verification section)
+export const clinicsAdminAPI = {
+  getClinics: async (
+    page = 1,
+    limit = 10,
+    search = "",
+    status = "",
+    wilaya = "",
+  ) => {
+    const client = await getApiClient();
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+    if (search) params.append("search", search);
+    if (status && status !== "all") params.append("status", status);
+    if (wilaya && wilaya !== "all") params.append("wilaya", wilaya);
+    return client.get(`/clinic/admin/list?${params.toString()}`);
+  },
+
+  getClinicById: async (id: string) => {
+    const client = await getApiClient();
+    return client.get(`/clinic/admin/${id}`);
+  },
+
+  // "approved" is the stored value for what the UI calls "Verified".
+  // rejectionReason is REQUIRED by the backend when rejecting (400 otherwise).
+  updateVerification: async (
+    id: string,
+    approvalStatus: "pending" | "approved" | "rejected" | "suspended",
+    rejectionReason?: string,
+  ) => {
+    const client = await getApiClient();
+    return client.patch(`/clinic/admin/${id}/verification`, {
+      approvalStatus,
+      ...(rejectionReason ? { rejectionReason } : {}),
+    });
+  },
+
+  // Approves a doctor's private practice (cabinet) so they show up in the
+  // public doctor list. Lives here because it is an admin-only verification.
+  updateDoctorCabinetApproval: async (
+    id: string,
+    approvalStatus: "approved" | "rejected" | "pending",
+  ) => {
+    const client = await getApiClient();
+    return client.patch(`/user/doctor/${id}/cabinet-approval`, {
+      approvalStatus,
+    });
+  },
+};
+
 // Patients APIs
 export const patientsAPI = {
   getPatients: async (page = 1, limit = 10, search = "", status = "") => {

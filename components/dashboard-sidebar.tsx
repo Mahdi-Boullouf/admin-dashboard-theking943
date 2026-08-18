@@ -8,6 +8,7 @@ import {
   Home,
   Users,
   UserCog,
+  Building2,
   Calendar,
   LayoutGrid,
   Wallet,
@@ -46,6 +47,7 @@ export function DashboardSidebar() {
   const menuItems = [
     { name: "Home", icon: Home, href: "/dashboard" },
     { name: "Doctor's", icon: UserCog, href: "/dashboard/doctors" },
+    { name: "Clinics", icon: Building2, href: "/dashboard/clinics" },
     { name: "Earnings", icon: Wallet, href: "/dashboard/earnings" },
     { name: "Patients", icon: Users, href: "/dashboard/patients" },
     { name: "Referral Code", icon: Users, href: "/dashboard/referral" },
