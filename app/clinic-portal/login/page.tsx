@@ -1,5 +1,7 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -18,6 +20,7 @@ import {
 import { clinicAuthAPI } from "@/lib/clinic-api";
 
 export default function ClinicLoginPage() {
+  const { lang, tr, toggle } = useClinicLang();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +39,7 @@ export default function ClinicLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      toast.error(tr.fillAllFields);
       return;
     }
     setIsLoading(true);
@@ -46,7 +49,7 @@ export default function ClinicLoginPage() {
       const { data } = res.data;
 
       if (data?.role !== "clinic" && data?.user?.role !== "clinic") {
-        toast.error("This account is not a clinic account");
+        toast.error(tr.notAClinicAccount);
         return;
       }
 
@@ -59,7 +62,7 @@ export default function ClinicLoginPage() {
       if (err.response?.status === 403 && message) {
         setBlockedMessage(message);
       } else {
-        toast.error(message || "Invalid email or password");
+        toast.error(message || tr.invalidEmailOrPassword);
       }
     } finally {
       setIsLoading(false);
@@ -81,7 +84,16 @@ export default function ClinicLoginPage() {
           </div>
           <div className="flex items-center justify-center gap-2 text-teal-700">
             <Building2 size={20} />
-            <span className="font-semibold text-base">Clinic Portal</span>
+            <span className="font-semibold text-base">{tr.clinicPortal}</span>
+            {/* Login sits outside the portal chrome, so it carries its own
+                toggle — otherwise the sign-in page is stuck in one language. */}
+            <button
+              type="button"
+              onClick={toggle}
+              className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-600 transition-colors"
+            >
+              {lang === "fr" ? "EN" : "FR"}
+            </button>
           </div>
           <CardDescription>
             Sign in to manage your clinic, doctors and appointments
@@ -98,7 +110,7 @@ export default function ClinicLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{tr.emailAddress}</Label>
               <Input
                 id="email"
                 type="email"
@@ -111,7 +123,7 @@ export default function ClinicLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{tr.password}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -139,7 +151,7 @@ export default function ClinicLoginPage() {
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? tr.signingIn : tr.signIn}
             </Button>
           </form>
 

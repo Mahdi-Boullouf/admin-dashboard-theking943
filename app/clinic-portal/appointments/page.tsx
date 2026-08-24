@@ -1,5 +1,8 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+import type { Dict } from "@/lib/clinic-i18n";
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -37,12 +40,12 @@ import { CheckCircle, XCircle, Video, MapPin } from "lucide-react";
 const ITEMS_PER_PAGE = 10;
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All statuses" },
-  { value: "pending", label: "Pending" },
-  { value: "accepted", label: "Accepted" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
+  { value: "all", key: "allStatuses" },
+  { value: "pending", key: "pending" },
+  { value: "accepted", key: "accepted" },
+  { value: "completed", key: "completed" },
+  { value: "cancelled", key: "cancelled" },
+] as const satisfies ReadonlyArray<{ value: string; key: keyof Dict }>;
 
 const statusColor = (status: string) => {
   switch (String(status || "").toLowerCase()) {
@@ -60,20 +63,25 @@ const statusColor = (status: string) => {
 };
 
 export default function ClinicAppointmentsPage() {
+  const { tr } = useClinicLang();
   const [page, setPage] = useState(1);
-  const [date, setDate] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [printRows, setPrintRows] = useState<any[]>([]);
   const [status, setStatus] = useState("all");
   const [doctorId, setDoctorId] = useState("all");
 
   const queryClient = useQueryClient();
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ["clinic-appointments", page, date, status, doctorId],
+    queryKey: ["clinic-appointments", page, dateFrom, dateTo, status, doctorId],
     queryFn: () =>
       clinicAppointmentsAPI.getAppointments(
         page,
         ITEMS_PER_PAGE,
-        date,
+        dateFrom,
+        dateTo,
         status,
         doctorId
       ),
@@ -99,13 +107,13 @@ export default function ClinicAppointmentsPage() {
       queryClient.invalidateQueries({ queryKey: ["clinic-dashboard"] });
       toast.success(
         variables.nextStatus === "accepted"
-          ? "Appointment confirmed"
-          : "Appointment cancelled"
+          ? tr.appointmentConfirmed
+          : tr.appointmentCancelled
       );
     },
     onError: (error: any) => {
       toast.error(
-        error.response?.data?.message || "Failed to update the appointment"
+        error.response?.data?.message || tr.appointmentUpdateFailed
       );
     },
   });
@@ -116,14 +124,133 @@ export default function ClinicAppointmentsPage() {
   const doctors = doctorsResponse?.data?.data || [];
 
   const clearFilters = () => {
-    setDate("");
+    setDateFrom("");
+    setDateTo("");
     setStatus("all");
     setDoctorId("all");
     setPage(1);
   };
 
+  // PDF comes from the browser's own print-to-PDF rather than a bundled PDF
+  // library: same output, no dependency. The fetch re-runs with export=true so
+  // the sheet carries the whole filtered range instead of the visible page.
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const res = await clinicAppointmentsAPI.getAppointments(
+        1,
+        5000,
+        dateFrom,
+        dateTo,
+        status,
+        doctorId,
+        true
+      );
+      const rows = res?.data?.data || [];
+      if (!rows.length) {
+        toast.error(tr.nothingToExport);
+        return;
+      }
+      setPrintRows(rows);
+      // Let React paint the print table before handing over to the browser.
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      window.print();
+    } catch {
+      toast.error(tr.exportFailed);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .print-sheet {
+          display: none;
+        }
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-sheet,
+          .print-sheet * {
+            visibility: visible;
+          }
+          .print-sheet {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .print-sheet table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+          }
+          .print-sheet th,
+          .print-sheet td {
+            border: 1px solid #999;
+            padding: 4px 6px;
+            text-align: left;
+          }
+          .print-sheet thead {
+            display: table-header-group;
+          }
+          .print-sheet tr {
+            page-break-inside: avoid;
+          }
+        }
+      ` }} />
+
+      <div className="print-sheet">
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+          {tr.appointmentsTitle}
+        </h2>
+        <p style={{ fontSize: 12, marginBottom: 12 }}>
+          {dateFrom || dateTo
+            ? `${dateFrom || tr.rangeStart} → ${dateTo || tr.rangeToday}`
+            : tr.allDates}
+          {status !== "all" ? ` — ${status}` : ""}
+          {` — ${printRows.length} appointment(s)`}
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>{tr.patient}</th>
+              <th>{tr.phone}</th>
+              <th>{tr.doctor}</th>
+              <th>Type</th>
+              <th>{tr.status}</th>
+              <th>{tr.symptoms}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {printRows.map((r: any) => (
+              <tr key={r._id}>
+                <td>
+                  {r.appointmentDate
+                    ? new Date(r.appointmentDate).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td>{r.time || "-"}</td>
+                <td>
+                  {r.bookedFor?.type === "dependent"
+                    ? `${r.bookedFor.dependentName} (${r.patient?.fullName})`
+                    : r.patient?.fullName || "-"}
+                </td>
+                <td>{r.patient?.phone || "-"}</td>
+                <td>{r.doctor?.fullName || "-"}</td>
+                <td>{r.appointmentType || "-"}</td>
+                <td>{r.status || "-"}</td>
+                <td>{r.symptoms || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
@@ -137,15 +264,29 @@ export default function ClinicAppointmentsPage() {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row md:items-end gap-4">
             <div className="flex-1 space-y-1">
-              <Label htmlFor="date" className="text-sm text-gray-600">
-                Date
+              <Label htmlFor="dateFrom" className="text-sm text-gray-600">
+                From
               </Label>
               <Input
-                id="date"
+                id="dateFrom"
                 type="date"
-                value={date}
+                value={dateFrom}
                 onChange={(e) => {
-                  setDate(e.target.value);
+                  setDateFrom(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="dateTo" className="text-sm text-gray-600">
+                To
+              </Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={dateTo}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
                   setPage(1);
                 }}
               />
@@ -160,12 +301,12 @@ export default function ClinicAppointmentsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
+                  <SelectValue placeholder={tr.allStatuses} />
                 </SelectTrigger>
                 <SelectContent>
                   {STATUS_OPTIONS.map((s) => (
                     <SelectItem key={s.value} value={s.value}>
-                      {s.label}
+                      {tr[s.key]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -181,10 +322,10 @@ export default function ClinicAppointmentsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All doctors" />
+                  <SelectValue placeholder={tr.allDoctors} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
-                  <SelectItem value="all">All doctors</SelectItem>
+                  <SelectItem value="all">{tr.allDoctors}</SelectItem>
                   {doctors
                     .filter((m: any) => m.doctor?._id)
                     .map((m: any) => (
@@ -198,6 +339,9 @@ export default function ClinicAppointmentsPage() {
             <Button variant="outline" onClick={clearFilters}>
               Clear
             </Button>
+            <Button onClick={handleExport} disabled={isExporting}>
+              {isExporting ? tr.preparing : tr.exportPdf}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -205,9 +349,9 @@ export default function ClinicAppointmentsPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Appointments List</CardTitle>
+          <CardTitle>{tr.appointmentsList}</CardTitle>
           <CardDescription>
-            Showing {appointments.length} of {totalResults} results
+            {tr.showingOf(appointments.length, totalResults)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -218,12 +362,12 @@ export default function ClinicAppointmentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Doctor</TableHead>
-                    <TableHead>Date &amp; time</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{tr.patient}</TableHead>
+                    <TableHead>{tr.doctor}</TableHead>
+                    <TableHead>{tr.dateAndTime}</TableHead>
+                    <TableHead>{tr.type}</TableHead>
+                    <TableHead>{tr.status}</TableHead>
+                    <TableHead>{tr.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

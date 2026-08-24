@@ -76,6 +76,12 @@ export const clinicDashboardAPI = {
   getDashboard: () => clinicClient.get("/clinic/me/dashboard"),
 };
 
+// Specialties must come from the platform's category list: free text here made
+// doctors invisible to patients filtering by specialty. GET /category is public.
+export const clinicCategoriesAPI = {
+  getAll: () => clinicClient.get("/category"),
+};
+
 export const clinicDoctorsAPI = {
   getDoctors: (page = 1, limit = 10, status = "", search = "") => {
     const params = new URLSearchParams({
@@ -121,17 +127,22 @@ export const clinicAppointmentsAPI = {
   getAppointments: (
     page = 1,
     limit = 10,
-    date = "",
+    dateFrom = "",
+    dateTo = "",
     status = "",
-    doctorId = ""
+    doctorId = "",
+    forExport = false
   ) => {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
     });
-    if (date) params.append("date", date);
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
     if (status && status !== "all") params.append("status", status);
     if (doctorId && doctorId !== "all") params.append("doctorId", doctorId);
+    // Lifts the page cap so a printed sheet holds the whole range, not one page.
+    if (forExport) params.append("export", "true");
     return clinicClient.get(`/clinic/me/appointments?${params.toString()}`);
   },
 

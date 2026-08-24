@@ -1,5 +1,7 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -44,6 +46,7 @@ type ServiceRow = {
 };
 
 export default function ClinicSettingsPage() {
+  const { tr } = useClinicLang();
   const queryClient = useQueryClient();
 
   const [profile, setProfile] = useState({
@@ -103,7 +106,7 @@ export default function ClinicSettingsPage() {
     mutationFn: (data: FormData) => clinicProfileAPI.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinic-profile"] });
-      toast.success("Profile updated");
+      toast.success(tr.profileUpdated);
       setLogo(null);
     },
     onError: (error: any) => {
@@ -116,7 +119,7 @@ export default function ClinicSettingsPage() {
       clinicProfileAPI.updateWorkingHours(weeklySchedule),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinic-profile"] });
-      toast.success("Opening hours saved");
+      toast.success(tr.hoursSaved);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to save hours");
@@ -127,7 +130,7 @@ export default function ClinicSettingsPage() {
     mutationFn: (payload: any[]) => clinicProfileAPI.updateServices(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinic-profile"] });
-      toast.success("Services saved");
+      toast.success(tr.servicesSaved);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to save services");
@@ -156,7 +159,7 @@ export default function ClinicSettingsPage() {
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile.name.trim()) {
-      toast.error("Clinic name is required");
+      toast.error(tr.clinicNameRequired);
       return;
     }
 
@@ -189,7 +192,7 @@ export default function ClinicSettingsPage() {
   const handleSaveServices = () => {
     for (const service of services) {
       if (!service.name.trim()) {
-        toast.error("Every service needs a name");
+        toast.error(tr.serviceNeedsName);
         return;
       }
     }
@@ -229,11 +232,11 @@ export default function ClinicSettingsPage() {
       {/* Profile */}
       <Card>
         <CardHeader>
-          <CardTitle>Clinic profile</CardTitle>
+          <CardTitle>{tr.clinicProfile}</CardTitle>
           <CardDescription>
             {clinic?.clinicId
-              ? `Clinic ID: ${clinic.clinicId}`
-              : "Details patients see when browsing"}
+              ? `${tr.clinicIdLabel}: ${clinic.clinicId}`
+              : tr.detailsPatientsSee}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -257,7 +260,7 @@ export default function ClinicSettingsPage() {
                 </div>
               )}
               <div className="flex-1 space-y-2">
-                <Label htmlFor="logo">Logo</Label>
+                <Label htmlFor="logo">{tr.logo}</Label>
                 <Input
                   id="logo"
                   type="file"
@@ -269,7 +272,7 @@ export default function ClinicSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Clinic name</Label>
+                <Label htmlFor="name">{tr.clinicName}</Label>
                 <Input
                   id="name"
                   value={profile.name}
@@ -279,7 +282,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="managerName">Manager name</Label>
+                <Label htmlFor="managerName">{tr.managerName}</Label>
                 <Input
                   id="managerName"
                   value={profile.managerName}
@@ -289,7 +292,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">{tr.phone}</Label>
                 <Input
                   id="phone"
                   value={profile.phone}
@@ -299,7 +302,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contactPhone">Public contact phone</Label>
+                <Label htmlFor="contactPhone">{tr.publicContactPhone}</Label>
                 <Input
                   id="contactPhone"
                   value={profile.contactPhone}
@@ -309,7 +312,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contactEmail">Public contact email</Label>
+                <Label htmlFor="contactEmail">{tr.publicContactEmail}</Label>
                 <Input
                   id="contactEmail"
                   type="email"
@@ -320,7 +323,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">{tr.address}</Label>
                 <Input
                   id="address"
                   value={profile.address}
@@ -330,7 +333,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="wilaya">Wilaya</Label>
+                <Label htmlFor="wilaya">{tr.wilaya}</Label>
                 <Select
                   value={profile.wilaya}
                   onValueChange={(val) =>
@@ -338,7 +341,7 @@ export default function ClinicSettingsPage() {
                   }
                 >
                   <SelectTrigger id="wilaya">
-                    <SelectValue placeholder="Select a wilaya" />
+                    <SelectValue placeholder={tr.selectAWilaya} />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {ALGERIA_WILAYAS.map((w) => (
@@ -350,7 +353,7 @@ export default function ClinicSettingsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="commune">Commune</Label>
+                <Label htmlFor="commune">{tr.commune}</Label>
                 <Input
                   id="commune"
                   value={profile.commune}
@@ -360,7 +363,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lat">Latitude</Label>
+                <Label htmlFor="lat">{tr.latitude}</Label>
                 <Input
                   id="lat"
                   value={profile.lat}
@@ -371,7 +374,7 @@ export default function ClinicSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lng">Longitude</Label>
+                <Label htmlFor="lng">{tr.longitude}</Label>
                 <Input
                   id="lng"
                   value={profile.lng}
@@ -386,7 +389,7 @@ export default function ClinicSettingsPage() {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="specialty">Specialties</Label>
+              <Label htmlFor="specialty">{tr.specialties}</Label>
               <div className="flex gap-2">
                 <Input
                   id="specialty"
@@ -398,7 +401,7 @@ export default function ClinicSettingsPage() {
                       addSpecialty();
                     }
                   }}
-                  placeholder="e.g. Cardiology — press Enter to add"
+                  placeholder={tr.specialtyChipHint}
                 />
                 <Button type="button" variant="outline" onClick={addSpecialty}>
                   Add
@@ -432,7 +435,7 @@ export default function ClinicSettingsPage() {
               className="bg-teal-600 hover:bg-teal-700"
               disabled={profileMutation.isPending}
             >
-              {profileMutation.isPending ? "Saving..." : "Save profile"}
+              {profileMutation.isPending ? tr.saving : tr.saveProfile}
             </Button>
           </form>
         </CardContent>
@@ -441,10 +444,9 @@ export default function ClinicSettingsPage() {
       {/* Opening hours */}
       <Card>
         <CardHeader>
-          <CardTitle>Opening hours</CardTitle>
+          <CardTitle>{tr.openingHours}</CardTitle>
           <CardDescription>
-            When your clinic is open. Each doctor keeps their own hours inside
-            these.
+            {tr.openingHoursHint}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -454,7 +456,7 @@ export default function ClinicSettingsPage() {
             onClick={handleSaveHours}
             disabled={hoursMutation.isPending}
           >
-            {hoursMutation.isPending ? "Saving..." : "Save opening hours"}
+            {hoursMutation.isPending ? tr.saving : tr.saveOpeningHours}
           </Button>
         </CardContent>
       </Card>
@@ -462,9 +464,9 @@ export default function ClinicSettingsPage() {
       {/* Services */}
       <Card>
         <CardHeader>
-          <CardTitle>Services</CardTitle>
+          <CardTitle>{tr.services}</CardTitle>
           <CardDescription>
-            The services your clinic offers, with their price and duration
+            {tr.servicesHint}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -480,7 +482,7 @@ export default function ClinicSettingsPage() {
                         onChange={(e) =>
                           patchService(index, { name: e.target.value })
                         }
-                        placeholder="Consultation"
+                        placeholder={tr.servicePlaceholder}
                       />
                     </div>
                     <div className="space-y-1">
@@ -518,7 +520,7 @@ export default function ClinicSettingsPage() {
                       onChange={(e) =>
                         patchService(index, { description: e.target.value })
                       }
-                      placeholder="Optional short description"
+                      placeholder={tr.optionalDescription}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -530,7 +532,7 @@ export default function ClinicSettingsPage() {
                         }
                       />
                       <span className="text-sm text-gray-600">
-                        {service.isActive ? "Active" : "Inactive"}
+                        {service.isActive ? tr.active : tr.inactive}
                       </span>
                     </div>
                     <Button
@@ -571,14 +573,14 @@ export default function ClinicSettingsPage() {
               }
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add service
+              {tr.addService}
             </Button>
             <Button
               className="bg-teal-600 hover:bg-teal-700"
               onClick={handleSaveServices}
               disabled={servicesMutation.isPending}
             >
-              {servicesMutation.isPending ? "Saving..." : "Save services"}
+              {servicesMutation.isPending ? tr.saving : tr.saveServices}
             </Button>
           </div>
         </CardContent>

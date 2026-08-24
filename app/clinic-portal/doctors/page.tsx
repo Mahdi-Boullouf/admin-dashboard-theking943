@@ -1,5 +1,8 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+import type { Dict } from "@/lib/clinic-i18n";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,7 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { clinicDoctorsAPI } from "@/lib/clinic-api";
+import { clinicDoctorsAPI, clinicCategoriesAPI } from "@/lib/clinic-api";
 import type { DaySchedule } from "@/lib/clinic-api";
 import {
   WeeklyScheduleEditor,
@@ -57,11 +60,11 @@ import { Search, Plus, UserPlus, Eye } from "lucide-react";
 const ITEMS_PER_PAGE = 10;
 
 const STATUS_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "invited", label: "Invited" },
-  { value: "disabled", label: "Disabled" },
-];
+  { value: "all", key: "all" },
+  { value: "active", key: "active" },
+  { value: "invited", key: "invited" },
+  { value: "disabled", key: "disabled" },
+] as const satisfies ReadonlyArray<{ value: string; key: keyof Dict }>;
 
 const statusColor = (status: string) => {
   switch (String(status || "").toLowerCase()) {
@@ -79,6 +82,7 @@ const statusColor = (status: string) => {
 };
 
 export default function ClinicDoctorsPage() {
+  const { tr } = useClinicLang();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -130,12 +134,23 @@ export default function ClinicDoctorsPage() {
     setSchedule(emptyWeeklySchedule());
   };
 
+  // The platform's specialties. Free text here produced doctors that matched no
+  // patient-side filter, so the field is a picker from this list only.
+  const { data: categoriesResp } = useQuery({
+    queryKey: ["clinic-specialties"],
+    queryFn: () => clinicCategoriesAPI.getAll(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const specialties: string[] = (categoriesResp?.data?.data ?? [])
+    .map((c: any) => c?.speciality_name)
+    .filter(Boolean);
+
   const createMutation = useMutation({
     mutationFn: (data: FormData) => clinicDoctorsAPI.createDoctor(data),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["clinic-doctors"] });
       queryClient.invalidateQueries({ queryKey: ["clinic-dashboard"] });
-      toast.success("Doctor created");
+      toast.success(tr.doctorCreated);
       setIsAddOpen(false);
       resetAddForm();
       const creds = res?.data?.data?.credentials;
@@ -151,7 +166,7 @@ export default function ClinicDoctorsPage() {
       clinicDoctorsAPI.inviteDoctor(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinic-doctors"] });
-      toast.success("Invitation sent");
+      toast.success(tr.invitationSent);
       setIsInviteOpen(false);
       setInviteValue("");
     },
@@ -167,11 +182,11 @@ export default function ClinicDoctorsPage() {
   const handleAddDoctor = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDoctor.fullName.trim()) {
-      toast.error("Doctor full name is required");
+      toast.error(tr.nameRequired);
       return;
     }
     if (!newDoctor.specialty.trim()) {
-      toast.error("Specialty is required");
+      toast.error(tr.specialtyRequired);
       return;
     }
     const scheduleError = validateWeeklySchedule(schedule);
@@ -256,7 +271,7 @@ export default function ClinicDoctorsPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
-                placeholder="Search by name, doctor ID or specialty..."
+                placeholder={tr.searchDoctorsPlaceholder}
                 className="pl-10"
                 value={search}
                 onChange={(e) => {
@@ -273,12 +288,12 @@ export default function ClinicDoctorsPage() {
               }}
             >
               <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue placeholder={tr.allStatuses} />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_FILTERS.map((f) => (
                   <SelectItem key={f.value} value={f.value}>
-                    {f.label}
+                    {tr[f.key]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -290,7 +305,7 @@ export default function ClinicDoctorsPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Clinic Doctors</CardTitle>
+          <CardTitle>{tr.clinicDoctors}</CardTitle>
           <CardDescription>
             Showing {doctors.length} of {totalResults} results
           </CardDescription>
@@ -303,12 +318,12 @@ export default function ClinicDoctorsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Doctor</TableHead>
-                    <TableHead>Specialty</TableHead>
-                    <TableHead>Origin</TableHead>
-                    <TableHead>Consultation</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{tr.doctor}</TableHead>
+                    <TableHead>{tr.specialty}</TableHead>
+                    <TableHead>{tr.origin}</TableHead>
+                    <TableHead>{tr.consultation}</TableHead>
+                    <TableHead>{tr.status}</TableHead>
+                    <TableHead>{tr.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -357,7 +372,7 @@ export default function ClinicDoctorsPage() {
                         <Link href={`/clinic-portal/doctors/${membership._id}`}>
                           <Button size="sm" variant="outline">
                             <Eye className="h-4 w-4 mr-1" />
-                            Manage
+                            {tr.manage}
                           </Button>
                         </Link>
                       </TableCell>
@@ -368,7 +383,7 @@ export default function ClinicDoctorsPage() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No doctors found
+              {tr.noDoctorsFound}
             </div>
           )}
         </CardContent>
@@ -378,7 +393,7 @@ export default function ClinicDoctorsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Page {page} of {totalPages}
+            {tr.page} {page} {tr.of} {totalPages}
           </p>
           <div className="flex gap-2">
             <Button
@@ -386,14 +401,14 @@ export default function ClinicDoctorsPage() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              {tr.previous}
             </Button>
             <Button
               variant="outline"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {tr.next}
             </Button>
           </div>
         </div>
@@ -403,7 +418,7 @@ export default function ClinicDoctorsPage() {
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add a doctor</DialogTitle>
+            <DialogTitle>{tr.addADoctor}</DialogTitle>
             <DialogDescription>
               This creates a real doctor account owned by the doctor. Login
               credentials are generated and shown to you once.
@@ -429,28 +444,37 @@ export default function ClinicDoctorsPage() {
                 <Label htmlFor="specialty">
                   Specialty <span className="text-red-600">*</span>
                 </Label>
-                <Input
-                  id="specialty"
+                <Select
                   value={newDoctor.specialty}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, specialty: e.target.value })
+                  onValueChange={(val) =>
+                    setNewDoctor({ ...newDoctor, specialty: val })
                   }
-                  placeholder="Cardiology"
-                />
+                >
+                  <SelectTrigger id="specialty">
+                    <SelectValue placeholder={tr.chooseSpecialty} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialties.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="subSpecialty">Sub-specialty</Label>
+                <Label htmlFor="subSpecialty">{tr.subSpecialty}</Label>
                 <Input
                   id="subSpecialty"
                   value={newDoctor.subSpecialty}
                   onChange={(e) =>
                     setNewDoctor({ ...newDoctor, subSpecialty: e.target.value })
                   }
-                  placeholder="Interventional cardiology"
+                  placeholder={tr.subSpecialtyPlaceholder}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="doctor-email">Email (optional)</Label>
+                <Label htmlFor="doctor-email">{tr.emailOptional}</Label>
                 <Input
                   id="doctor-email"
                   type="email"
@@ -462,7 +486,7 @@ export default function ClinicDoctorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="professionalPhone">Professional phone</Label>
+                <Label htmlFor="professionalPhone">{tr.professionalPhone}</Label>
                 <Input
                   id="professionalPhone"
                   value={newDoctor.professionalPhone}
@@ -476,7 +500,7 @@ export default function ClinicDoctorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="license">Medical licence number</Label>
+                <Label htmlFor="license">{tr.licenceNumber}</Label>
                 <Input
                   id="license"
                   value={newDoctor.medicalLicenseNumber}
@@ -486,11 +510,11 @@ export default function ClinicDoctorsPage() {
                       medicalLicenseNumber: e.target.value,
                     })
                   }
-                  placeholder="Licence number"
+                  placeholder={tr.licenceNumberPlaceholder}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration">Consultation duration (min)</Label>
+                <Label htmlFor="duration">{tr.consultationDuration}</Label>
                 <Input
                   id="duration"
                   type="number"
@@ -505,7 +529,7 @@ export default function ClinicDoctorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="patientsPerPeriod">Patients per period</Label>
+                <Label htmlFor="patientsPerPeriod">{tr.patientsPerPeriod}</Label>
                 <Input
                   id="patientsPerPeriod"
                   type="number"
@@ -521,7 +545,7 @@ export default function ClinicDoctorsPage() {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="photo">Photo (optional)</Label>
+                <Label htmlFor="photo">{tr.photoOptional}</Label>
                 <Input
                   id="photo"
                   type="file"
@@ -550,7 +574,7 @@ export default function ClinicDoctorsPage() {
             <Separator />
 
             <div className="space-y-2">
-              <Label>Working hours in this clinic</Label>
+              <Label>{tr.workingHoursHere}</Label>
               <WeeklyScheduleEditor value={schedule} onChange={setSchedule} />
             </div>
 
@@ -559,7 +583,7 @@ export default function ClinicDoctorsPage() {
               className="w-full bg-teal-600 hover:bg-teal-700"
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending ? "Creating..." : "Create doctor"}
+              {createMutation.isPending ? tr.creating : tr.createDoctor}
             </Button>
           </form>
         </DialogContent>
@@ -569,10 +593,9 @@ export default function ClinicDoctorsPage() {
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite an existing doctor</DialogTitle>
+            <DialogTitle>{tr.inviteExistingTitle}</DialogTitle>
             <DialogDescription>
-              The doctor keeps their own account and has to accept the
-              invitation before they appear as active.
+              {tr.inviteExistingHint}
             </DialogDescription>
           </DialogHeader>
 
@@ -610,7 +633,7 @@ export default function ClinicDoctorsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="invite-value">
-                {inviteMode === "doctorId" ? "Doctor ID" : "Email address"}
+                {inviteMode === "doctorId" ? tr.doctorIdLabel : tr.emailAddress}
               </Label>
               <Input
                 id="invite-value"
@@ -628,7 +651,7 @@ export default function ClinicDoctorsPage() {
               className="w-full bg-teal-600 hover:bg-teal-700"
               disabled={inviteMutation.isPending}
             >
-              {inviteMutation.isPending ? "Sending..." : "Send invitation"}
+              {inviteMutation.isPending ? tr.sending : tr.sendInvitation}
             </Button>
           </form>
         </DialogContent>

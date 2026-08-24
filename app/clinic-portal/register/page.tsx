@@ -1,5 +1,8 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+import type { Dict } from "@/lib/clinic-i18n";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -47,15 +50,19 @@ import {
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { title: "Account", description: "Clinic identity and login" },
-  { title: "Location", description: "Where patients will find you" },
-  { title: "Profile", description: "Specialties and opening hours" },
-  { title: "Documents", description: "Logo and proof of registration" },
-];
+  { title: "stepAccount", description: "stepAccountDesc" },
+  { title: "stepLocation", description: "stepLocationDesc" },
+  { title: "stepProfile", description: "stepProfileDesc" },
+  { title: "stepDocuments", description: "stepDocumentsDesc" },
+] as const satisfies ReadonlyArray<{
+  title: keyof Dict;
+  description: keyof Dict;
+}>;
 
 const MAX_DOCUMENTS = 5;
 
 export default function ClinicRegisterPage() {
+  const { tr } = useClinicLang();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +122,7 @@ export default function ClinicRegisterPage() {
     const incoming = Array.from(files);
     const next = [...documents, ...incoming].slice(0, MAX_DOCUMENTS);
     if (documents.length + incoming.length > MAX_DOCUMENTS) {
-      toast.error(`You can upload at most ${MAX_DOCUMENTS} documents`);
+      toast.error(tr.tooManyDocuments);
     }
     setDocuments(next);
   };
@@ -123,20 +130,20 @@ export default function ClinicRegisterPage() {
   /** Returns an error message for the given step, or null if it can be left. */
   const validateStep = (index: number): string | null => {
     if (index === 0) {
-      if (!form.clinicName.trim()) return "Clinic name is required";
-      if (!form.managerName.trim()) return "Manager name is required";
-      if (!form.email.trim()) return "Email is required";
-      if (!form.phone.trim()) return "Phone is required";
+      if (!form.clinicName.trim()) return tr.clinicNameRequired;
+      if (!form.managerName.trim()) return tr.managerNameRequired;
+      if (!form.email.trim()) return tr.emailRequired;
+      if (!form.phone.trim()) return tr.phoneRequired;
       if (form.password.length < 6)
-        return "Password must be at least 6 characters";
+        return tr.passwordMin6;
       if (form.password !== form.confirmPassword)
-        return "Passwords do not match";
+        return tr.passwordsMismatch;
       return null;
     }
     if (index === 1) {
-      if (!form.address.trim()) return "Address is required";
-      if (!form.wilaya) return "Wilaya is required";
-      if (!form.commune.trim()) return "Commune is required";
+      if (!form.address.trim()) return tr.addressRequired;
+      if (!form.wilaya) return tr.wilayaRequired;
+      if (!form.commune.trim()) return tr.communeRequired;
       return null;
     }
     if (index === 2) {
@@ -192,7 +199,7 @@ export default function ClinicRegisterPage() {
     } catch (err: any) {
       toast.error(
         err.response?.data?.message ||
-          "Registration failed. Please check your details and try again."
+          tr.registrationFailedRetry
       );
     } finally {
       setIsLoading(false);
@@ -206,18 +213,16 @@ export default function ClinicRegisterPage() {
           <CardContent className="pt-10 pb-8 text-center space-y-4">
             <CheckCircle2 className="h-14 w-14 text-green-600 mx-auto" />
             <h1 className="text-2xl font-bold text-gray-900">
-              Registration submitted
+              {tr.registrationSubmitted}
             </h1>
             <p className="text-gray-600">
-              Your clinic account has been created and is now waiting for an
-              administrator to verify your documents. You will not be able to
-              sign in until it is approved.
+              {tr.registrationSubmittedBody}
             </p>
             <Button
               className="bg-teal-600 hover:bg-teal-700"
               onClick={() => router.push("/clinic-portal/login")}
             >
-              Go to sign in
+              {tr.goToSignIn}
             </Button>
           </CardContent>
         </Card>
@@ -288,8 +293,8 @@ export default function ClinicRegisterPage() {
         <form onSubmit={handleSubmit}>
           <Card className="shadow-xl">
             <CardHeader>
-              <CardTitle>{STEPS[step].title}</CardTitle>
-              <CardDescription>{STEPS[step].description}</CardDescription>
+              <CardTitle>{tr[STEPS[step].title]}</CardTitle>
+              <CardDescription>{tr[STEPS[step].description]}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Step 1 — account */}
@@ -298,7 +303,7 @@ export default function ClinicRegisterPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="clinicName">
-                        Clinic name <span className="text-red-600">*</span>
+                        {tr.clinicName} <span className="text-red-600">*</span>
                       </Label>
                       <Input
                         id="clinicName"
@@ -309,13 +314,13 @@ export default function ClinicRegisterPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="managerName">
-                        Manager name <span className="text-red-600">*</span>
+                        {tr.managerName} <span className="text-red-600">*</span>
                       </Label>
                       <Input
                         id="managerName"
                         value={form.managerName}
                         onChange={(e) => setField("managerName", e.target.value)}
-                        placeholder="Full name of the responsible manager"
+                        placeholder={tr.managerNamePlaceholder}
                       />
                     </div>
                     <div className="space-y-2">
@@ -344,7 +349,7 @@ export default function ClinicRegisterPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">
-                        Password <span className="text-red-600">*</span>
+                        {tr.password} <span className="text-red-600">*</span>
                       </Label>
                       <div className="relative">
                         <Input
@@ -352,7 +357,7 @@ export default function ClinicRegisterPage() {
                           type={showPassword ? "text" : "password"}
                           value={form.password}
                           onChange={(e) => setField("password", e.target.value)}
-                          placeholder="At least 6 characters"
+                          placeholder={tr.atLeast6Chars}
                           className="pr-10"
                           autoComplete="new-password"
                         />
@@ -376,7 +381,7 @@ export default function ClinicRegisterPage() {
                         onChange={(e) =>
                           setField("confirmPassword", e.target.value)
                         }
-                        placeholder="Repeat your password"
+                        placeholder={tr.repeatPassword}
                         autoComplete="new-password"
                       />
                     </div>
@@ -395,7 +400,7 @@ export default function ClinicRegisterPage() {
                       id="address"
                       value={form.address}
                       onChange={(e) => setField("address", e.target.value)}
-                      placeholder="Street, building, floor"
+                      placeholder={tr.streetPlaceholder}
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -408,7 +413,7 @@ export default function ClinicRegisterPage() {
                         onValueChange={(val) => setField("wilaya", val)}
                       >
                         <SelectTrigger id="wilaya">
-                          <SelectValue placeholder="Select a wilaya" />
+                          <SelectValue placeholder={tr.selectAWilaya} />
                         </SelectTrigger>
                         <SelectContent className="max-h-72">
                           {ALGERIA_WILAYAS.map((w) => (
@@ -427,11 +432,11 @@ export default function ClinicRegisterPage() {
                         id="commune"
                         value={form.commune}
                         onChange={(e) => setField("commune", e.target.value)}
-                        placeholder="Commune"
+                        placeholder={tr.communePlaceholder}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lat">Latitude (optional)</Label>
+                      <Label htmlFor="lat">{tr.latitudeOptional}</Label>
                       <Input
                         id="lat"
                         value={form.lat}
@@ -440,7 +445,7 @@ export default function ClinicRegisterPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lng">Longitude (optional)</Label>
+                      <Label htmlFor="lng">{tr.longitudeOptional}</Label>
                       <Input
                         id="lng"
                         value={form.lng}
@@ -460,7 +465,7 @@ export default function ClinicRegisterPage() {
               {step === 2 && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="specialty">Specialties</Label>
+                    <Label htmlFor="specialty">{tr.specialties}</Label>
                     <div className="flex gap-2">
                       <Input
                         id="specialty"
@@ -473,7 +478,7 @@ export default function ClinicRegisterPage() {
                             addSpecialty();
                           }
                         }}
-                        placeholder="e.g. Cardiology — press Enter to add"
+                        placeholder={tr.specialtyChipHint}
                       />
                       <Button type="button" variant="outline" onClick={addSpecialty}>
                         Add
@@ -505,7 +510,7 @@ export default function ClinicRegisterPage() {
                   </div>
 
                   <div className="space-y-2 pt-2">
-                    <Label>Opening hours</Label>
+                    <Label>{tr.openingHours}</Label>
                     <WeeklyScheduleEditor
                       value={weeklySchedule}
                       onChange={setWeeklySchedule}
@@ -518,7 +523,7 @@ export default function ClinicRegisterPage() {
               {step === 3 && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="logo">Clinic logo (optional)</Label>
+                    <Label htmlFor="logo">{tr.clinicLogoOptional}</Label>
                     <div className="flex items-center gap-4">
                       {logoPreview && (
                         <img
@@ -598,7 +603,7 @@ export default function ClinicRegisterPage() {
                   disabled={step === 0 || isLoading}
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back
+                  {tr.back}
                 </Button>
 
                 {step < STEPS.length - 1 ? (
@@ -607,7 +612,7 @@ export default function ClinicRegisterPage() {
                     className="bg-teal-600 hover:bg-teal-700"
                     onClick={goNext}
                   >
-                    Next
+                    {tr.next}
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 ) : (
@@ -619,7 +624,7 @@ export default function ClinicRegisterPage() {
                     {isLoading && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    {isLoading ? "Submitting..." : "Submit registration"}
+                    {isLoading ? tr.submitting : tr.submitRegistration}
                   </Button>
                 )}
               </div>

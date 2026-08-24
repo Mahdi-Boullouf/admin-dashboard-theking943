@@ -1,5 +1,7 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -48,6 +50,7 @@ const statusColor = (status: string) => {
 };
 
 export default function ClinicDashboardPage() {
+  const { tr } = useClinicLang();
   const { data: response, isLoading } = useQuery({
     queryKey: ["clinic-dashboard"],
     queryFn: () => clinicDashboardAPI.getDashboard(),
@@ -66,28 +69,28 @@ export default function ClinicDashboardPage() {
 
   const stats = [
     {
-      title: "Doctors",
+      title: tr.totalDoctors,
       value: data?.doctorCount ?? 0,
       icon: Stethoscope,
       color: "bg-teal-100",
       iconColor: "text-teal-600",
     },
     {
-      title: "Active Doctors",
+      title: tr.activeDoctors,
       value: data?.activeDoctorCount ?? 0,
       icon: UserCheck,
       color: "bg-green-100",
       iconColor: "text-green-600",
     },
     {
-      title: "Today's Appointments",
+      title: tr.todaysAppointments,
       value: data?.todayAppointmentCount ?? 0,
       icon: CalendarDays,
       color: "bg-blue-100",
       iconColor: "text-blue-600",
     },
     {
-      title: "Unique Patients",
+      title: tr.uniquePatients,
       value: data?.uniquePatientCount ?? 0,
       icon: Users,
       color: "bg-purple-100",
@@ -106,7 +109,7 @@ export default function ClinicDashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{tr.dashboardTitle}</h1>
         <p className="text-gray-600 mt-2">
           An overview of your clinic&apos;s doctors and appointments
         </p>
@@ -155,7 +158,7 @@ export default function ClinicDashboardPage() {
       {/* Weekly trend */}
       <Card>
         <CardHeader>
-          <CardTitle>Appointments — last 7 days</CardTitle>
+          <CardTitle>{tr.last7Days}</CardTitle>
           <CardDescription>
             Daily appointment volume across all your doctors
           </CardDescription>
@@ -190,8 +193,8 @@ export default function ClinicDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Upcoming appointments</CardTitle>
-              <CardDescription>The next appointments booked</CardDescription>
+              <CardTitle>{tr.upcomingAppointments}</CardTitle>
+              <CardDescription>{tr.nextAppointmentsBooked}</CardDescription>
             </div>
             <Link href="/clinic-portal/appointments">
               <Button variant="ghost" size="sm">
@@ -216,7 +219,7 @@ export default function ClinicDashboardPage() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">
-                        {appt.patient?.fullName || "Patient"}
+                        {appt.patient?.fullName || tr.patient}
                       </p>
                       <p className="text-xs text-gray-500 truncate">
                         Dr. {appt.doctor?.fullName || "—"} ·{" "}

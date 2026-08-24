@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  ClinicLangProvider,
+  useClinicLang,
+} from "@/components/clinic-lang";
 
 interface ClinicUser {
   _id: string;
@@ -34,18 +38,31 @@ interface ClinicUser {
 const PUBLIC_ROUTES = ["/clinic-portal/login", "/clinic-portal/register"];
 
 const NAV_ITEMS = [
-  { name: "Dashboard", href: "/clinic-portal", icon: LayoutDashboard },
-  { name: "Doctors", href: "/clinic-portal/doctors", icon: Stethoscope },
-  { name: "Appointments", href: "/clinic-portal/appointments", icon: Calendar },
-  { name: "Settings", href: "/clinic-portal/settings", icon: Settings },
-  { name: "Activity", href: "/clinic-portal/audit", icon: ScrollText },
-];
+  { key: "navDashboard", href: "/clinic-portal", icon: LayoutDashboard },
+  { key: "navDoctors", href: "/clinic-portal/doctors", icon: Stethoscope },
+  {
+    key: "navAppointments",
+    href: "/clinic-portal/appointments",
+    icon: Calendar,
+  },
+  { key: "navSettings", href: "/clinic-portal/settings", icon: Settings },
+  { key: "navActivity", href: "/clinic-portal/audit", icon: ScrollText },
+] as const;
 
 export default function ClinicPortalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <ClinicLangProvider>
+      <ClinicPortalChrome>{children}</ClinicPortalChrome>
+    </ClinicLangProvider>
+  );
+}
+
+function ClinicPortalChrome({ children }: { children: React.ReactNode }) {
+  const { lang, tr, toggle } = useClinicLang();
   const router = useRouter();
   const pathname = usePathname();
   const [clinic, setClinic] = useState<ClinicUser | null>(null);
@@ -79,14 +96,14 @@ export default function ClinicPortalLayout({
   const handleLogout = () => {
     localStorage.removeItem("clinic_token");
     localStorage.removeItem("clinic_user");
-    toast.success("Logged out");
+    toast.success(tr.loggedOut);
     router.push("/clinic-portal/login");
   };
 
   if (!checked) return null;
   if (isPublic) return <>{children}</>;
 
-  const displayName = clinic?.name || clinic?.fullName || "Clinic";
+  const displayName = clinic?.name || clinic?.fullName || tr.clinic;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -105,12 +122,18 @@ export default function ClinicPortalLayout({
             </div>
             <div className="hidden sm:flex items-center gap-1.5 text-teal-700 bg-teal-50 px-3 py-1 rounded-full text-xs font-medium">
               <Building2 size={13} />
-              Clinic Portal
+              {tr.clinicPortal}
             </div>
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggle}
+              className="text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-600 transition-colors"
+            >
+              {lang === "fr" ? "EN" : "FR"}
+            </button>
             <div className="flex items-center gap-2.5">
               <Avatar className="h-9 w-9 border-2 border-teal-100">
                 <AvatarImage src={clinic?.avatar?.url} />
@@ -135,7 +158,7 @@ export default function ClinicPortalLayout({
               className="text-gray-500 hover:text-red-600 hover:bg-red-50"
             >
               <LogOut size={16} className="mr-1" />
-              <span className="hidden sm:inline">Log out</span>
+              <span className="hidden sm:inline">{tr.logOut}</span>
             </Button>
           </div>
         </div>
@@ -161,7 +184,7 @@ export default function ClinicPortalLayout({
                   )}
                 >
                   <Icon size={16} />
-                  {item.name}
+                  {tr[item.key]}
                 </Link>
               );
             })}

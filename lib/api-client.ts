@@ -112,14 +112,33 @@ export const dashboardAPI = {
 
 // Doctors APIs
 export const doctorsAPI = {
-  getDoctors: async (page = 1, limit = 10, search = "", status = "") => {
+  getDoctors: async (
+    page = 1,
+    limit = 10,
+    search = "",
+    status = "",
+    cabinetStatus = "",
+  ) => {
     const client = await getApiClient();
     const params = new URLSearchParams();
     params.append("page", page.toString());
     params.append("limit", limit.toString());
     if (search) params.append("search", search);
     if (status) params.append("status", status);
+    // Admin must see clinic-created doctors too (see lib/api.ts).
+    params.append("includeClinicOnly", "true");
+    if (cabinetStatus && cabinetStatus !== "all")
+      params.append("cabinetStatus", cabinetStatus);
     return client.get(`/user/role/doctor?${params.toString()}`);
+  },
+
+  // Cabinet approval is a separate decision from account approval: the doctor
+  // is already approved, this grants them their own practice location.
+  approveCabinet: async (id: string, approvalStatus: string) => {
+    const client = await getApiClient();
+    return client.patch(`/user/doctor/${id}/cabinet-approval`, {
+      approvalStatus,
+    });
   },
 
   getDoctorById: async (id: string) => {

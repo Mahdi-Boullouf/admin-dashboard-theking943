@@ -1,5 +1,8 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+import type { Dict } from "@/lib/clinic-i18n";
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -29,27 +32,31 @@ const ITEMS_PER_PAGE = 20;
  * deliberately not an enum — so this map is a best-effort prettifier with a
  * generic fallback rather than an exhaustive switch.
  */
-const ACTION_LABELS: Record<string, string> = {
-  "clinic.doctor.create": "Created a doctor",
-  "clinic.doctor.invite": "Invited a doctor",
-  "clinic.doctor.update": "Updated a doctor",
-  "clinic.doctor.schedule": "Updated a doctor's schedule",
-  "clinic.doctor.status": "Changed a doctor's status",
-  "clinic.doctor.remove": "Removed a doctor",
-  "clinic.doctor.reset_access": "Reset a doctor's access",
-  "clinic.profile.update": "Updated the clinic profile",
-  "clinic.services.update": "Updated the clinic services",
-  "clinic.working_hours.update": "Updated the opening hours",
-  "clinic.register": "Registered the clinic",
-  "clinic.verification.update": "Verification status changed",
+const ACTION_KEYS: Record<string, keyof Dict> = {
+  "clinic.doctor.create": "actCreateDoctor",
+  "clinic.doctor.invite": "actInviteDoctor",
+  "clinic.doctor.update": "actUpdateDoctor",
+  "clinic.doctor.schedule": "actDoctorSchedule",
+  "clinic.doctor.status": "actDoctorStatus",
+  "clinic.doctor.remove": "actRemoveDoctor",
+  "clinic.doctor.reset_access": "actResetAccess",
+  "clinic.profile.update": "actProfileUpdate",
+  "clinic.services.update": "actServicesUpdate",
+  "clinic.working_hours.update": "actHoursUpdate",
+  "clinic.register": "actRegister",
+  "clinic.verification.update": "actVerification",
+  "clinic.logo.delete": "actLogoDelete",
 };
 
-const prettyAction = (action: string) =>
-  ACTION_LABELS[action] ||
-  String(action || "")
+const prettyAction = (action: string, tr: Dict) => {
+  const key = ACTION_KEYS[action];
+  if (key) return tr[key] as string;
+  // Unknown dotted action: fall back to a readable form of the raw string.
+  return String(action || "")
     .split(".")
-    .join(" · ")
+    .join(" ")
     .replace(/_/g, " ");
+};
 
 const actionColor = (action: string) => {
   const value = String(action || "");
@@ -63,6 +70,7 @@ const actionColor = (action: string) => {
 };
 
 export default function ClinicAuditPage() {
+  const { tr } = useClinicLang();
   const [page, setPage] = useState(1);
 
   const { data: response, isLoading } = useQuery({
@@ -78,7 +86,7 @@ export default function ClinicAuditPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Activity log</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{tr.auditLogTitle}</h1>
         <p className="text-gray-600 mt-2">
           Every administrative action taken on your clinic
         </p>
@@ -86,7 +94,7 @@ export default function ClinicAuditPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>History</CardTitle>
+          <CardTitle>{tr.history}</CardTitle>
           <CardDescription>
             Showing {rows.length} of {totalResults} entries
           </CardDescription>
@@ -99,11 +107,11 @@ export default function ClinicAuditPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>When</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>By</TableHead>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Details</TableHead>
+                    <TableHead>{tr.when}</TableHead>
+                    <TableHead>{tr.action}</TableHead>
+                    <TableHead>{tr.performedBy}</TableHead>
+                    <TableHead>{tr.target}</TableHead>
+                    <TableHead>{tr.details}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -116,7 +124,7 @@ export default function ClinicAuditPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={actionColor(row.action)}>
-                          {prettyAction(row.action)}
+                          {prettyAction(row.action, tr)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">

@@ -1,5 +1,7 @@
 "use client";
 
+import { useClinicLang } from "@/components/clinic-lang";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,6 +67,7 @@ const statusColor = (status: string) => {
 };
 
 export default function ClinicDoctorDetailPage() {
+  const { tr } = useClinicLang();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -126,10 +129,10 @@ export default function ClinicDoctorDetailPage() {
     mutationFn: (data: any) => clinicDoctorsAPI.updateDoctor(membershipId, data),
     onSuccess: () => {
       invalidate();
-      toast.success("Doctor details updated");
+      toast.success(tr.doctorUpdated);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update doctor");
+      toast.error(error.response?.data?.message || tr.doctorUpdateFailed);
     },
   });
 
@@ -138,10 +141,10 @@ export default function ClinicDoctorDetailPage() {
       clinicDoctorsAPI.updateSchedule(membershipId, weeklySchedule),
     onSuccess: () => {
       invalidate();
-      toast.success("Schedule saved");
+      toast.success(tr.scheduleSaved);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to save schedule");
+      toast.error(error.response?.data?.message || tr.scheduleSaveFailed);
     },
   });
 
@@ -150,10 +153,10 @@ export default function ClinicDoctorDetailPage() {
       clinicDoctorsAPI.setStatus(membershipId, status),
     onSuccess: (_data, status) => {
       invalidate();
-      toast.success(status === "active" ? "Doctor enabled" : "Doctor disabled");
+      toast.success(status === "active" ? tr.doctorEnabled : tr.doctorDisabled);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update status");
+      toast.error(error.response?.data?.message || tr.statusUpdateFailed);
     },
   });
 
@@ -161,12 +164,12 @@ export default function ClinicDoctorDetailPage() {
     mutationFn: () => clinicDoctorsAPI.removeDoctor(membershipId),
     onSuccess: () => {
       invalidate();
-      toast.success("Doctor removed from this clinic");
+      toast.success(tr.doctorRemovedFromClinic);
       setShowRemoveConfirm(false);
       router.push("/clinic-portal/doctors");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to remove doctor");
+      toast.error(error.response?.data?.message || tr.doctorRemoveFailed);
     },
   });
 
@@ -178,7 +181,7 @@ export default function ClinicDoctorDetailPage() {
       if (creds?.temporaryPassword) {
         setCredentials(creds);
       } else {
-        toast.success("Access reset");
+        toast.success(tr.accessResetShort);
       }
     },
     onError: (error: any) => {
@@ -289,16 +292,16 @@ export default function ClinicDoctorDetailPage() {
       {/* Practice settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Practice settings</CardTitle>
+          <CardTitle>{tr.practiceSettings}</CardTitle>
           <CardDescription>
-            How this doctor practises inside your clinic
+            {tr.practiceSettingsDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveSettings} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="subSpecialty">Sub-specialty</Label>
+                <Label htmlFor="subSpecialty">{tr.subSpecialty}</Label>
                 <Input
                   id="subSpecialty"
                   value={settings.subSpecialty}
@@ -308,7 +311,7 @@ export default function ClinicDoctorDetailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="professionalPhone">Professional phone</Label>
+                <Label htmlFor="professionalPhone">{tr.professionalPhone}</Label>
                 <Input
                   id="professionalPhone"
                   value={settings.professionalPhone}
@@ -321,7 +324,7 @@ export default function ClinicDoctorDetailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration">Consultation duration (min)</Label>
+                <Label htmlFor="duration">{tr.consultationDuration}</Label>
                 <Input
                   id="duration"
                   type="number"
@@ -336,7 +339,7 @@ export default function ClinicDoctorDetailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="patientsPerPeriod">Patients per period</Label>
+                <Label htmlFor="patientsPerPeriod">{tr.patientsPerPeriod}</Label>
                 <Input
                   id="patientsPerPeriod"
                   type="number"
@@ -351,7 +354,7 @@ export default function ClinicDoctorDetailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fee">Consultation fee (DA)</Label>
+                <Label htmlFor="fee">{tr.consultationFee}</Label>
                 <Input
                   id="fee"
                   type="number"
@@ -394,10 +397,9 @@ export default function ClinicDoctorDetailPage() {
       {/* Weekly schedule */}
       <Card>
         <CardHeader>
-          <CardTitle>Working hours in this clinic</CardTitle>
+          <CardTitle>{tr.workingHoursThisClinic}</CardTitle>
           <CardDescription>
-            These hours apply to this clinic only — the doctor&apos;s other
-            venues keep their own schedule
+            {tr.hoursThisClinicOnly}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -416,11 +418,10 @@ export default function ClinicDoctorDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" /> Messaging activity
+            <MessageSquare className="h-4 w-4" /> {tr.messagingActivity}
           </CardTitle>
           <CardDescription>
-            Volume only. Conversations between a doctor and their patients are
-            private — their content is never visible to the clinic.
+            {tr.messagingActivityDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -448,7 +449,7 @@ export default function ClinicDoctorDetailPage() {
           </div>
           <div className="mt-4 flex items-start gap-2 rounded-lg border bg-gray-50 p-3 text-sm text-gray-600">
             <Lock className="h-4 w-4 shrink-0 mt-0.5" />
-            <p>Message content cannot be opened from the clinic portal.</p>
+            <p>{tr.messageContentBlocked}</p>
           </div>
         </CardContent>
       </Card>
@@ -456,9 +457,9 @@ export default function ClinicDoctorDetailPage() {
       {/* Danger zone */}
       <Card className="border-red-200">
         <CardHeader>
-          <CardTitle className="text-red-700">Access</CardTitle>
+          <CardTitle className="text-red-700">{tr.accessSection}</CardTitle>
           <CardDescription>
-            Disable, reset or remove this doctor&apos;s access to your clinic
+            {tr.accessSectionDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -498,12 +499,9 @@ export default function ClinicDoctorDetailPage() {
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset this doctor&apos;s access?</AlertDialogTitle>
+            <AlertDialogTitle>{tr.resetAccessConfirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              A new temporary password will be generated and shown to you once.
-              The doctor&apos;s current password stops working immediately. If
-              the doctor has since become independent of your clinic, this will
-              be refused.
+              {tr.resetAccessConfirmBody}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -528,9 +526,9 @@ export default function ClinicDoctorDetailPage() {
       <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove from this clinic?</AlertDialogTitle>
+            <AlertDialogTitle>{tr.removeConfirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Dr. {doctor?.fullName || "This doctor"} will no longer practise at
+              Dr. {doctor?.fullName || tr.thisDoctor} will no longer practise at
               your clinic and will disappear from your lists. Their DocMobi
               account is <strong>not</strong> deleted — they keep their profile,
               their history and any other clinic they belong to.

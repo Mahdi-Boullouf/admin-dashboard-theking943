@@ -69,6 +69,7 @@ export default function DoctorsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [cabinetStatus, setCabinetStatus] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   // Doctor pending deletion (null = no confirmation dialog open)
@@ -77,8 +78,9 @@ export default function DoctorsPage() {
   const ITEMS_PER_PAGE = 10;
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ["doctors", page, search, status],
-    queryFn: () => doctorsAPI.getDoctors(page, ITEMS_PER_PAGE, search, status),
+    queryKey: ["doctors", page, search, status, cabinetStatus],
+    queryFn: () =>
+      doctorsAPI.getDoctors(page, ITEMS_PER_PAGE, search, status, cabinetStatus),
   });
 
   const { data: detailResponse, isFetching: isDetailLoading } = useQuery({
@@ -88,6 +90,25 @@ export default function DoctorsPage() {
   });
 
   const doctorDetail = detailResponse?.data?.data || null;
+
+  const cabinetMutation = useMutation({
+    mutationFn: ({
+      id,
+      approvalStatus,
+    }: {
+      id: string;
+      approvalStatus: string;
+    }) => doctorsAPI.approveCabinet(id, approvalStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Cabinet decision saved");
+    },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update the cabinet",
+      );
+    },
+  });
 
   const approveMutation = useMutation({
     mutationFn: ({
@@ -181,6 +202,25 @@ export default function DoctorsPage() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Cabinet approval queue: doctors who asked to run their own
+                  cabinet and are waiting on an admin decision. */}
+              <Select
+                value={cabinetStatus}
+                onValueChange={(val) => {
+                  setCabinetStatus(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full md:w-56">
+                  <SelectValue placeholder="All cabinets" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All cabinets</SelectItem>
+                  <SelectItem value="pending">Cabinet pending</SelectItem>
+                  <SelectItem value="approved">Cabinet approved</SelectItem>
+                  <SelectItem value="rejected">Cabinet rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -203,6 +243,7 @@ export default function DoctorsPage() {
                     <TableRow>
                       <TableHead>Doctor Name</TableHead>
                       <TableHead>Specialty</TableHead>
+                      <TableHead>Clinic</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Referral</TableHead>
@@ -242,6 +283,22 @@ export default function DoctorsPage() {
                               doctor.specialties?.[0] ||
                               "N/A"}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {doctor.clinics?.length ? (
+                            <div className="space-y-0.5">
+                              {doctor.clinics.map((c: any) => (
+                                <p key={c._id} className="text-xs">
+                                  {c.name}
+                                  {c.status !== "active" ? ` (${c.status})` : ""}
+                                </p>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              Independent
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm">
                           {doctor.email}
@@ -295,6 +352,41 @@ export default function DoctorsPage() {
                                 </Button>
                               </>
                             )}
+                            {doctor.hasCabinet &&
+                              doctor.cabinet?.approvalStatus === "pending" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-green-600 hover:text-green-700 bg-transparent"
+                                    onClick={() =>
+                                      cabinetMutation.mutate({
+                                        id: doctor._id,
+                                        approvalStatus: "approved",
+                                      })
+                                    }
+                                    disabled={cabinetMutation.isPending}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Cabinet
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700 bg-transparent"
+                                    onClick={() =>
+                                      cabinetMutation.mutate({
+                                        id: doctor._id,
+                                        approvalStatus: "rejected",
+                                      })
+                                    }
+                                    disabled={cabinetMutation.isPending}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Cabinet
+                                  </Button>
+                                </>
+                              )}
                             <Button
                               size="sm"
                               variant="ghost"

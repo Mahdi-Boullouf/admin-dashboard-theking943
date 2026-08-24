@@ -97,6 +97,9 @@ export const doctorsAPI = {
     params.append("limit", limit.toString());
     if (search) params.append("search", search);
     if (status) params.append("status", status);
+    // Admin must see clinic-created doctors too. Without this the backend hides
+    // them (isIndependentlyListed !== false) and they are invisible here.
+    params.append("includeClinicOnly", "true");
     return getAxiosInstance().get(`/user/role/doctor?${params.toString()}`);
   },
 
