@@ -96,7 +96,7 @@ export default function ClinicLoginPage() {
             </button>
           </div>
           <CardDescription>
-            Sign in to manage your clinic, doctors and appointments
+            {tr.signInSubtitleFull}
           </CardDescription>
         </CardHeader>
 
@@ -156,12 +156,12 @@ export default function ClinicLoginPage() {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don&apos;t have a clinic account yet?{" "}
+            {tr.noAccountYet}{" "}
             <Link
               href="/clinic-portal/register"
               className="text-teal-700 font-medium hover:underline"
             >
-              Register your clinic
+              {tr.registerYourClinic}
             </Link>
           </p>
         </CardContent>

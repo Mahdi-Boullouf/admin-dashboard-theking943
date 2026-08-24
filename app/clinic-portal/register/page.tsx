@@ -247,7 +247,7 @@ export default function ClinicRegisterPage() {
           <div className="flex items-center justify-center gap-2 text-teal-700">
             <Building2 size={20} />
             <span className="font-semibold text-base">
-              Register your clinic
+              {tr.registerYourClinic}
             </span>
           </div>
         </div>
@@ -455,8 +455,7 @@ export default function ClinicRegisterPage() {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Coordinates let patients find you on the map. You can add
-                    them later from your settings.
+                    {tr.coordinatesHint}
                   </p>
                 </>
               )}
@@ -553,9 +552,7 @@ export default function ClinicRegisterPage() {
                       onChange={(e) => handleDocumentsChange(e.target.files)}
                     />
                     <p className="text-xs text-gray-500">
-                      Images or PDF. Include your business registration and any
-                      health-authority approval — an administrator reviews these
-                      before your account is activated.
+                      {tr.documentsHint}
                     </p>
                     {documents.length > 0 && (
                       <div className="space-y-2 pt-1">
@@ -586,9 +583,7 @@ export default function ClinicRegisterPage() {
                   <div className="rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900 flex gap-2">
                     <Upload className="h-4 w-4 shrink-0 mt-0.5" />
                     <p>
-                      After submitting, your account stays pending until an
-                      administrator verifies it. You will not be able to sign in
-                      before then.
+                      {tr.pendingUntilVerified}
                     </p>
                   </div>
                 </>
@@ -638,7 +633,7 @@ export default function ClinicRegisterPage() {
             href="/clinic-portal/login"
             className="text-teal-700 font-medium hover:underline"
           >
-            Sign in
+            {tr.signIn}
           </Link>
         </p>
       </div>

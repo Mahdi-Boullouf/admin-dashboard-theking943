@@ -223,9 +223,9 @@ export default function ClinicSettingsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{tr.settingsTitle}</h1>
         <p className="text-gray-600 mt-2">
-          Your clinic profile, opening hours and services
+          {tr.settingsSubtitle}
         </p>
       </div>
 
@@ -498,7 +498,7 @@ export default function ClinicSettingsPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-500">
-                        Duration (min)
+                        {tr.durationMinutes}
                       </Label>
                       <Input
                         type="number"
@@ -551,7 +551,7 @@ export default function ClinicSettingsPage() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No services yet
+              {tr.noServicesYet}
             </div>
           )}
 

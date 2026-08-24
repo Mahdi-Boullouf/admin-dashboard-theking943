@@ -253,9 +253,9 @@ export default function ClinicAppointmentsPage() {
       </div>
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{tr.appointmentsTitle}</h1>
         <p className="text-gray-600 mt-2">
-          Appointments booked with your clinic&apos;s doctors
+          {tr.appointmentsSubtitle}
         </p>
       </div>
 
@@ -466,7 +466,7 @@ export default function ClinicAppointmentsPage() {
                           {appt.status !== "pending" &&
                             appt.status !== "accepted" && (
                               <span className="text-xs text-gray-400">
-                                No actions
+                                {tr.noActions}
                               </span>
                             )}
                         </div>
@@ -478,7 +478,7 @@ export default function ClinicAppointmentsPage() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No appointments found
+              {tr.noAppointmentsFound}
             </div>
           )}
         </CardContent>

@@ -88,7 +88,7 @@ export default function ClinicAuditPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">{tr.auditLogTitle}</h1>
         <p className="text-gray-600 mt-2">
-          Every administrative action taken on your clinic
+          {tr.auditSubtitleFull}
         </p>
       </div>
 
@@ -165,7 +165,7 @@ export default function ClinicAuditPage() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No activity recorded yet
+              {tr.noActivityYet}
             </div>
           )}
         </CardContent>
