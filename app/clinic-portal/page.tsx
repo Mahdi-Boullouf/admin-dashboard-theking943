@@ -111,7 +111,7 @@ export default function ClinicDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">{tr.dashboardTitle}</h1>
         <p className="text-gray-600 mt-2">
-          An overview of your clinic&apos;s doctors and appointments
+          {tr.dashboardSubtitle}
         </p>
       </div>
 
@@ -160,7 +160,7 @@ export default function ClinicDashboardPage() {
         <CardHeader>
           <CardTitle>{tr.last7Days}</CardTitle>
           <CardDescription>
-            Daily appointment volume across all your doctors
+            {tr.dailyVolume}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,7 +182,7 @@ export default function ClinicDashboardPage() {
             </ResponsiveContainer>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No appointment data yet
+              {tr.noAppointmentData}
             </div>
           )}
         </CardContent>
@@ -198,7 +198,7 @@ export default function ClinicDashboardPage() {
             </div>
             <Link href="/clinic-portal/appointments">
               <Button variant="ghost" size="sm">
-                View all
+                {tr.viewAll}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
@@ -237,7 +237,7 @@ export default function ClinicDashboardPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                No upcoming appointments
+                {tr.noUpcomingAppointments}
               </div>
             )}
           </CardContent>
@@ -251,12 +251,12 @@ export default function ClinicDashboardPage() {
                 <Clock className="h-4 w-4" /> Available now
               </CardTitle>
               <CardDescription>
-                Doctors whose hours cover the current time
+                {tr.onDutyNow}
               </CardDescription>
             </div>
             <Link href="/clinic-portal/doctors">
               <Button variant="ghost" size="sm">
-                All doctors
+                {tr.allDoctors}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
@@ -291,7 +291,7 @@ export default function ClinicDashboardPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                No doctors available right now
+                {tr.noDoctorsRightNow}
               </div>
             )}
           </CardContent>

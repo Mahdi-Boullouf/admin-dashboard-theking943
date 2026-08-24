@@ -234,7 +234,7 @@ export default function ClinicDoctorDetailPage() {
     return (
       <Card>
         <CardContent className="py-8 text-center text-gray-500">
-          Doctor not found
+          {tr.doctorNotFound}
         </CardContent>
       </Card>
     );
@@ -250,9 +250,9 @@ export default function ClinicDoctorDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Doctor</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{tr.doctor}</h1>
           <p className="text-gray-600">
-            Manage this doctor&apos;s practice inside your clinic
+            {tr.manageDoctorPractice}
           </p>
         </div>
       </div>
@@ -379,7 +379,7 @@ export default function ClinicDoctorDetailPage() {
                 }
               />
               <Label htmlFor="online" className="cursor-pointer">
-                Available for online consultations
+                {tr.availableOnline}
               </Label>
             </div>
 
@@ -481,7 +481,7 @@ export default function ClinicDoctorDetailPage() {
               onClick={() => setShowResetConfirm(true)}
             >
               <KeyRound className="h-4 w-4 mr-1" />
-              Reset access
+              {tr.resetAccess}
             </Button>
             <Button
               variant="outline"
@@ -489,7 +489,7 @@ export default function ClinicDoctorDetailPage() {
               onClick={() => setShowRemoveConfirm(true)}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              Remove from clinic
+              {tr.removeFromClinic}
             </Button>
           </div>
         </CardContent>
@@ -528,10 +528,7 @@ export default function ClinicDoctorDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{tr.removeConfirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Dr. {doctor?.fullName || tr.thisDoctor} will no longer practise at
-              your clinic and will disappear from your lists. Their DocMobi
-              account is <strong>not</strong> deleted — they keep their profile,
-              their history and any other clinic they belong to.
+              Dr. {doctor?.fullName || tr.thisDoctor} {tr.removeConfirmBody}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

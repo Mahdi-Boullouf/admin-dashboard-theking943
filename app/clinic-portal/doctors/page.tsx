@@ -243,23 +243,22 @@ export default function ClinicDoctorsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Doctors</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{tr.doctorsTitle}</h1>
           <p className="text-gray-600 mt-2">
-            Create doctor accounts, invite existing doctors and manage their
-            access
+            {tr.doctorsSubtitleFull}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsInviteOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
-            Invite doctor
+            {tr.inviteDoctor}
           </Button>
           <Button
             className="bg-teal-600 hover:bg-teal-700"
             onClick={() => setIsAddOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add doctor
+            {tr.addDoctor}
           </Button>
         </div>
       </div>
@@ -420,8 +419,7 @@ export default function ClinicDoctorsPage() {
           <DialogHeader>
             <DialogTitle>{tr.addADoctor}</DialogTitle>
             <DialogDescription>
-              This creates a real doctor account owned by the doctor. Login
-              credentials are generated and shown to you once.
+              {tr.addDoctorDialogHint}
             </DialogDescription>
           </DialogHeader>
 
@@ -567,7 +565,7 @@ export default function ClinicDoctorsPage() {
                 }
               />
               <Label htmlFor="online" className="cursor-pointer">
-                Available for online consultations
+                {tr.availableOnline}
               </Label>
             </div>
 
@@ -613,7 +611,7 @@ export default function ClinicDoctorsPage() {
                   setInviteValue("");
                 }}
               >
-                By doctor ID
+                {tr.byDoctorId}
               </Button>
               <Button
                 type="button"
@@ -627,7 +625,7 @@ export default function ClinicDoctorsPage() {
                   setInviteValue("");
                 }}
               >
-                By email
+                {tr.byEmail}
               </Button>
             </div>
 
